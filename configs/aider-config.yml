@@ -1,0 +1,48 @@
+# Aider Configuration File
+# Place this in your project root as .aider.conf.yml or ~/.aider.conf.yml
+
+# Model settings
+model: ollama/qwen2.5-coder:14b
+
+# Editor model for complex edits (can use same or different model)
+# editor-model: ollama/qwen2.5-coder:32b
+
+# Ollama settings
+ollama-api-base: http://localhost:11434
+
+# Git settings
+auto-commits: true
+dirty-commits: false
+attribute-author: true
+attribute-committer: false
+
+# Output settings
+pretty: true
+stream: true
+show-diffs: true
+
+# Context settings
+map-tokens: 1024
+max-chat-history-tokens: 4096
+
+# File handling
+auto-lint: true
+lint-cmd: ""  # Set per-project, e.g., "ruff check --fix"
+
+# Behavior
+suggest-shell-commands: true
+detect-urls: true
+
+# Voice settings (optional, requires additional setup)
+# voice-language: en
+
+# Editor settings
+# editor: vim
+# edit-format: diff
+
+# Dark mode (for terminal)
+dark-mode: true
+
+# Model-specific settings for better performance with Ollama
+# These help with local models that may have different behaviors
+check-update: false

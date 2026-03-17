@@ -1,0 +1,43 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+ENV/
+.venv/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Local configuration (contains personal settings)
+.env
+.env.local
+*.local.yml
+*.local.json
+
+# Aider
+.aider*
+!.aider.conf.yml.example
+
+# Temporary files
+tmp/
+temp/
+*.tmp

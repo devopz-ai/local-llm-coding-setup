@@ -1,0 +1,74 @@
+{
+  "models": [
+    {
+      "title": "Qwen2.5 Coder 14B",
+      "provider": "ollama",
+      "model": "qwen2.5-coder:14b",
+      "apiBase": "http://localhost:11434",
+      "contextLength": 8192
+    },
+    {
+      "title": "Qwen2.5 Coder 7B (Fast)",
+      "provider": "ollama",
+      "model": "qwen2.5-coder:7b",
+      "apiBase": "http://localhost:11434",
+      "contextLength": 8192
+    },
+    {
+      "title": "DeepSeek Coder V2 16B",
+      "provider": "ollama",
+      "model": "deepseek-coder-v2:16b",
+      "apiBase": "http://localhost:11434",
+      "contextLength": 8192
+    },
+    {
+      "title": "Codestral 22B",
+      "provider": "ollama",
+      "model": "codestral:22b",
+      "apiBase": "http://localhost:11434",
+      "contextLength": 8192
+    },
+    {
+      "title": "Qwen2.5 Coder 32B (Best)",
+      "provider": "ollama",
+      "model": "qwen2.5-coder:32b",
+      "apiBase": "http://localhost:11434",
+      "contextLength": 8192
+    }
+  ],
+  "tabAutocompleteModel": {
+    "title": "Qwen2.5 Coder 7B",
+    "provider": "ollama",
+    "model": "qwen2.5-coder:7b",
+    "apiBase": "http://localhost:11434"
+  },
+  "embeddingsProvider": {
+    "provider": "ollama",
+    "model": "nomic-embed-text",
+    "apiBase": "http://localhost:11434"
+  },
+  "customCommands": [
+    {
+      "name": "test",
+      "prompt": "{{{ input }}}\n\nWrite a comprehensive unit test for this code. Use appropriate testing conventions for the language.",
+      "description": "Generate unit tests"
+    },
+    {
+      "name": "review",
+      "prompt": "{{{ input }}}\n\nReview this code for:\n1. Bugs and potential issues\n2. Performance concerns\n3. Security vulnerabilities\n4. Code style and best practices\n\nProvide specific suggestions for improvement.",
+      "description": "Code review"
+    },
+    {
+      "name": "explain",
+      "prompt": "{{{ input }}}\n\nExplain this code in detail:\n1. What it does\n2. How it works\n3. Key algorithms or patterns used\n4. Any edge cases handled",
+      "description": "Explain code"
+    },
+    {
+      "name": "refactor",
+      "prompt": "{{{ input }}}\n\nRefactor this code to improve:\n1. Readability\n2. Maintainability\n3. Performance (if applicable)\n\nExplain your changes.",
+      "description": "Refactor code"
+    }
+  ],
+  "allowAnonymousTelemetry": false,
+  "docs": []
+}
