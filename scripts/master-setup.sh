@@ -488,25 +488,75 @@ configure_opencode() {
 
     print_step "Configuring OpenCode..."
 
-    local config_dir="$HOME/.opencode"
+    # OpenCode uses ~/.config/opencode for configuration
+    local config_dir="$HOME/.config/opencode"
     mkdir -p "$config_dir"
 
-    local first_model=$(echo "${SELECTED_MODELS[0]}" | sed 's/:/-/g' | sed 's/\./-/g')
+    # Build model entries for selected models
+    local litellm_models=""
+    local ollama_models=""
+    for model in "${SELECTED_MODELS[@]}"; do
+        local litellm_name=$(echo "$model" | sed 's/:/-/g' | sed 's/\./-/g')
+        local display_name=$(echo "$model" | sed 's/:/ /g' | sed 's/\./ /g')
 
-    cat > "$config_dir/config.json" << EOF
+        # Add to LiteLLM models
+        if [[ -n "$litellm_models" ]]; then
+            litellm_models="$litellm_models,"
+        fi
+        litellm_models="$litellm_models
+        \"$litellm_name\": {
+          \"name\": \"$display_name (FREE via LiteLLM)\",
+          \"limit\": { \"context\": 32768, \"output\": 8192 }
+        }"
+
+        # Add to Ollama models (direct)
+        if [[ -n "$ollama_models" ]]; then
+            ollama_models="$ollama_models,"
+        fi
+        ollama_models="$ollama_models
+        \"$model\": {
+          \"name\": \"$display_name (FREE direct)\",
+          \"limit\": { \"context\": 32768, \"output\": 8192 }
+        }"
+    done
+
+    # Create OpenCode config with custom providers
+    cat > "$config_dir/opencode.json" << EOF
 {
-  "provider": "openai-compatible",
-  "apiBase": "http://localhost:$LITELLM_PORT",
-  "apiKey": "$API_KEY",
-  "model": "$first_model",
-  "options": {
-    "temperature": 0.3,
-    "maxTokens": 4096
+  "\$schema": "https://opencode.ai/config.json",
+  "provider": {
+    "litellm": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "LiteLLM (Local)",
+      "options": {
+        "baseURL": "http://localhost:$LITELLM_PORT/v1",
+        "apiKey": "{env:LITELLM_API_KEY}"
+      },
+      "models": {$litellm_models,
+        "claude-sonnet": {
+          "name": "Claude 3.5 Sonnet (Bedrock)",
+          "limit": { "context": 200000, "output": 8192 }
+        },
+        "claude-haiku": {
+          "name": "Claude 3.5 Haiku (Bedrock)",
+          "limit": { "context": 200000, "output": 8192 }
+        }
+      }
+    },
+    "ollama": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "Ollama (Direct)",
+      "options": {
+        "baseURL": "http://localhost:11434/v1"
+      },
+      "models": {$ollama_models
+      }
+    }
   }
 }
 EOF
 
-    print_success "OpenCode config created"
+    print_success "OpenCode config created at $config_dir/opencode.json"
 }
 
 configure_mem0() {
@@ -571,10 +621,8 @@ export OLLAMA_API_BASE=http://localhost:11434
 export OLLAMA_NUM_PARALLEL=2
 export OLLAMA_MAX_LOADED_MODELS=2
 
-# LiteLLM / OpenAI-compatible API
-export OPENAI_API_BASE=http://localhost:$LITELLM_PORT
-export OPENAI_API_KEY=$API_KEY
-export OPENAI_MODEL=$first_model_name
+# LiteLLM API key (for OpenCode and other tools)
+export LITELLM_API_KEY=$API_KEY
 
 # Aliases
 alias llm-start="$python_bin/litellm --config ~/.litellm/config.yaml --port $LITELLM_PORT"
@@ -584,9 +632,12 @@ EOF
     if [[ "$INSTALL_OPENCODE" == "true" ]]; then
         cat >> "$shell_rc" << EOF
 
-# OpenCode - uses OPENAI_API_BASE, OPENAI_API_KEY, OPENAI_MODEL env vars
-alias oc="opencode"
-alias oc-fast="OPENAI_MODEL=$first_model_name opencode"
+# OpenCode - uses litellm provider with local models
+# Usage: opencode -m litellm/<model> or opencode -m ollama/<model>
+alias oc="opencode -m litellm/$first_model_name"
+alias oc-fast="opencode -m litellm/$first_model_name"
+alias oc-ollama="opencode -m ollama/${SELECTED_MODELS[0]}"
+alias oc-claude="opencode -m litellm/claude-sonnet"
 EOF
     fi
 

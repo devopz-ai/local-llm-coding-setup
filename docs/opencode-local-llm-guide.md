@@ -45,79 +45,97 @@ opencode --help
 
 ## Configuration for Local LLMs
 
-OpenCode uses OpenAI-compatible APIs and reads configuration from **environment variables**. This is the most reliable method.
+OpenCode requires a configuration file to define custom providers like LiteLLM or direct Ollama access.
 
-### Method 1: Environment Variables (Recommended)
+### Method 1: opencode.json Config (Recommended)
 
-OpenCode reads these environment variables for OpenAI-compatible providers:
-
-```bash
-# Add to ~/.zshrc
-export OPENAI_API_BASE=http://localhost:4000    # LiteLLM proxy
-export OPENAI_API_KEY=sk-litellm-master-key-change-me
-export OPENAI_MODEL=qwen2-5-coder-7b            # Model name in LiteLLM
-```
-
-Then run:
-```bash
-source ~/.zshrc
-opencode
-```
-
-Or run with inline environment variables:
-```bash
-OPENAI_API_BASE=http://localhost:4000 \
-OPENAI_API_KEY=sk-litellm-master-key-change-me \
-OPENAI_MODEL=qwen2-5-coder-7b \
-opencode
-```
-
-### Method 2: Via LiteLLM Proxy
-
-LiteLLM provides a unified OpenAI-compatible API for all your local models.
-
-1. **Start LiteLLM**:
-```bash
-./scripts/start-litellm.sh
-# or
-litellm --config ~/.litellm/config.yaml --port 4000
-```
-
-2. **Set environment variables**:
-```bash
-export OPENAI_API_BASE=http://localhost:4000
-export OPENAI_API_KEY=sk-litellm-master-key-change-me
-export OPENAI_MODEL=qwen2-5-coder-7b
-```
-
-3. **Run OpenCode**:
-```bash
-opencode
-```
-
-### Method 3: Config File (Alternative)
-
-You can also use a config file at `~/.opencode/config.json`:
+Create the configuration file at `~/.config/opencode/opencode.json`:
 
 ```json
 {
-  "provider": "openai-compatible",
-  "apiBase": "http://localhost:4000",
-  "apiKey": "sk-litellm-master-key-change-me",
-  "model": "qwen2-5-coder-7b",
-  "options": {
-    "temperature": 0.3
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    "litellm": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "LiteLLM (Local)",
+      "options": {
+        "baseURL": "http://localhost:4000/v1",
+        "apiKey": "{env:LITELLM_API_KEY}"
+      },
+      "models": {
+        "qwen-coder-fast": {
+          "name": "Qwen 2.5 Coder 7B (FREE)",
+          "limit": { "context": 32768, "output": 8192 }
+        },
+        "qwen-coder": {
+          "name": "Qwen 2.5 Coder 14B (FREE)",
+          "limit": { "context": 32768, "output": 8192 }
+        },
+        "claude-sonnet": {
+          "name": "Claude 3.5 Sonnet (Bedrock)",
+          "limit": { "context": 200000, "output": 8192 }
+        }
+      }
+    },
+    "ollama": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "Ollama (Direct)",
+      "options": {
+        "baseURL": "http://localhost:11434/v1"
+      },
+      "models": {
+        "qwen2.5-coder:7b": {
+          "name": "Qwen 2.5 Coder 7B",
+          "limit": { "context": 32768, "output": 8192 }
+        }
+      }
+    }
   }
 }
 ```
 
-Or use environment variables:
+Then set the API key environment variable in `~/.zshrc`:
+```bash
+export LITELLM_API_KEY=sk-litellm-master-key-change-me
+```
+
+### Method 2: Running OpenCode with Local Models
+
+Once configured, run OpenCode with the `-m` flag:
 
 ```bash
-# Add to ~/.zshrc
-export OPENAI_API_BASE=http://localhost:4000
-export OPENAI_API_KEY=sk-1234
-export OPENCODE_MODEL=qwen-coder
+# Via LiteLLM proxy (recommended)
+opencode -m litellm/qwen-coder-fast
+
+# Direct Ollama access
+opencode -m ollama/qwen2.5-coder:7b
+
+# Using Bedrock through LiteLLM
+opencode -m litellm/claude-sonnet
+```
+
+### Method 3: Shell Aliases (Convenience)
+
+Add these aliases to `~/.zshrc`:
+
+```bash
+# OpenCode with local models
+alias oc="opencode -m litellm/qwen-coder-fast"
+alias oc-fast="opencode -m litellm/qwen-coder-fast"
+alias oc-ollama="opencode -m ollama/qwen2.5-coder:7b"
+alias oc-claude="opencode -m litellm/claude-sonnet"
+```
+
+### Verifying Configuration
+
+Check available models after configuration:
+
+```bash
+# List LiteLLM models
+opencode models litellm
+
+# List Ollama models
+opencode models ollama
 ```
 
 ## Available Local Models
@@ -311,11 +329,14 @@ opencode --profile cloud   # Use Bedrock Claude
 Add to `~/.zshrc` for convenience:
 
 ```bash
-# OpenCode with local models
-alias oc="opencode"
-alias oc-fast="OPENCODE_MODEL=qwen-coder-fast opencode"
-alias oc-best="OPENCODE_MODEL=qwen-coder-best opencode"
-alias oc-claude="OPENCODE_MODEL=claude-sonnet opencode"
+# OpenCode with local models via LiteLLM
+alias oc="opencode -m litellm/qwen-coder-fast"
+alias oc-fast="opencode -m litellm/qwen-coder-fast"
+alias oc-best="opencode -m litellm/qwen-coder-best"
+alias oc-claude="opencode -m litellm/claude-sonnet"
+
+# Direct Ollama access (no LiteLLM needed)
+alias oc-ollama="opencode -m ollama/qwen2.5-coder:7b"
 
 # Ensure LiteLLM is running before OpenCode
 function opencode-local() {
