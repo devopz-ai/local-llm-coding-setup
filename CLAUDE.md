@@ -59,8 +59,14 @@ This repository contains setup guides and scripts for running open-source LLMs l
 ### Tools
 - **Aider**: CLI pair programming tool
 - **OpenCode**: Alternative CLI assistant
+- **Claude Code**: Anthropic's official CLI
 - **Open WebUI**: Web interface for chat
 - **Continue**: VS Code extension
+
+### Memory Management
+- **mem0**: Intelligent memory layer for LLMs
+- **ChromaDB**: Vector database for semantic search
+- **nomic-embed-text**: Local embedding model
 
 ## Directory Structure
 
@@ -72,16 +78,23 @@ local-llm-coding-setup/
 │   ├── setup.sh                 # Initial setup (Ollama + Aider)
 │   ├── setup-litellm.sh         # LiteLLM proxy setup
 │   ├── setup-opencode.sh        # OpenCode CLI setup
+│   ├── setup-memory.sh          # Memory management setup
 │   ├── pull-models.sh           # Download Ollama models
 │   ├── start-litellm.sh         # Start LiteLLM proxy
 │   ├── start-webui.sh           # Start Open WebUI
-│   └── start-aider.sh           # Start Aider session
+│   ├── start-aider.sh           # Start Aider session
+│   ├── memory-helper.py         # Memory CLI tool (created by setup)
+│   └── aider-with-memory.sh     # Aider with memory context
 ├── configs/
 │   ├── litellm-config.yaml      # LiteLLM routing config
+│   ├── mem0-config.yaml         # Memory management config
 │   ├── continue-config.json     # VS Code Continue config
 │   ├── aider-config.yml         # Aider configuration
 │   └── ollama-modelfile-coding  # Custom model settings
 └── docs/
+    ├── claude-code-cli-guide.md # Claude Code CLI setup
+    ├── opencode-local-llm-guide.md # OpenCode with local LLMs
+    ├── memory-management-guide.md  # Memory system guide
     ├── litellm-bedrock-guide.md # LiteLLM + Bedrock guide
     ├── models-comparison.md     # Detailed model comparison
     └── troubleshooting.md       # Common issues and fixes
@@ -105,6 +118,12 @@ ollama run qwen2.5-coder:14b
 # Check what's running
 ollama ps
 curl http://localhost:4000/v1/models
+
+# Memory Management
+mem add "Project uses FastAPI"   # Add memory
+mem search "framework"            # Search memories
+mem list                          # List all memories
+aider-mem                         # Aider with memory context
 ```
 
 ## Model Recommendations by Task

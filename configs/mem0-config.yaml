@@ -1,0 +1,89 @@
+# mem0 Configuration for Local LLM Coding Setup
+#
+# This configures mem0 to use local Ollama models for:
+# - Memory extraction and processing (LLM)
+# - Semantic search and retrieval (Embeddings)
+# - Persistent storage (ChromaDB)
+#
+# Copy to ~/.mem0/config.yaml
+
+# Vector store for semantic memory search
+vector_store:
+  provider: chroma
+  config:
+    collection_name: coding_memory
+    path: ~/.mem0/chroma_db
+    # Optional: use hosted Chroma
+    # host: localhost
+    # port: 8000
+
+# LLM for memory processing
+llm:
+  provider: ollama
+  config:
+    model: qwen2.5-coder:7b
+    ollama_base_url: http://localhost:11434
+    temperature: 0.1
+    max_tokens: 1000
+
+  # Alternative: Use LiteLLM for flexibility
+  # provider: litellm
+  # config:
+  #   model: qwen-coder
+  #   api_base: http://localhost:4000
+  #   api_key: sk-1234
+
+  # Alternative: Use Bedrock for enterprise
+  # provider: bedrock
+  # config:
+  #   model: anthropic.claude-3-5-haiku-20241022-v1:0
+  #   aws_region: us-west-2
+
+# Embedding model for vector search
+embedder:
+  provider: ollama
+  config:
+    model: nomic-embed-text
+    ollama_base_url: http://localhost:11434
+
+  # Alternative: Use sentence-transformers
+  # provider: huggingface
+  # config:
+  #   model: sentence-transformers/all-MiniLM-L6-v2
+
+# SQLite database for conversation history
+history_db:
+  provider: sqlite
+  config:
+    path: ~/.mem0/history.db
+
+# Graph store for entity relationships (optional)
+# graph_store:
+#   provider: neo4j
+#   config:
+#     url: bolt://localhost:7687
+#     username: neo4j
+#     password: password
+
+# Memory settings
+memory:
+  # Automatically extract facts from conversations
+  auto_extract: true
+
+  # Maximum memories to store per user
+  max_memories: 1000
+
+  # Memory relevance threshold (0-1)
+  relevance_threshold: 0.7
+
+  # Categories for organizing memories
+  categories:
+    - architecture
+    - database
+    - authentication
+    - testing
+    - deployment
+    - dependencies
+    - conventions
+    - bugs
+    - features

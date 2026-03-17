@@ -56,13 +56,15 @@ A complete guide to setting up open-source LLMs for daily coding on Apple Silico
 1. [Prerequisites](#prerequisites)
 2. [Ollama Setup](#ollama-setup)
 3. [Recommended Models](#recommended-models)
-4. [LiteLLM Proxy](#litellm-proxy-unified-api) *(NEW)*
-5. [AWS Bedrock Integration](#aws-bedrock-integration) *(NEW)*
+4. [LiteLLM Proxy](#litellm-proxy-unified-api)
+5. [AWS Bedrock Integration](#aws-bedrock-integration)
 6. [Web UI Options](#web-ui-options)
 7. [CLI Coding Tools](#cli-coding-tools)
-8. [IDE Integration](#ide-integration)
-9. [Performance Tuning](#performance-tuning)
-10. [Troubleshooting](#troubleshooting)
+8. [Claude Code CLI](#claude-code-cli)
+9. [Memory Management](#memory-management)
+10. [IDE Integration](#ide-integration)
+11. [Performance Tuning](#performance-tuning)
+12. [Troubleshooting](#troubleshooting)
 
 ---
 
@@ -491,6 +493,151 @@ llm install llm-ollama
 # Use
 llm -m qwen2.5-coder:7b "Explain this code: $(cat myfile.py)"
 ```
+
+---
+
+## Claude Code CLI
+
+Claude Code is Anthropic's official CLI for AI-powered coding. Use it with AWS Bedrock for enterprise deployments.
+
+### Installation
+
+```bash
+# Via Homebrew
+brew install claude-code
+
+# Or via npm
+npm install -g @anthropic-ai/claude-code
+```
+
+### Configure for Bedrock
+
+```bash
+# Set up AWS credentials
+aws configure
+
+# Enable Bedrock provider
+export CLAUDE_CODE_USE_BEDROCK=1
+export AWS_REGION=us-west-2
+
+# Run Claude Code
+claude
+```
+
+### Configuration File
+
+Create `~/.claude-code/config.json`:
+
+```json
+{
+  "provider": "bedrock",
+  "aws": {
+    "region": "us-west-2"
+  },
+  "model": "anthropic.claude-3-5-sonnet-20241022-v2:0"
+}
+```
+
+### Usage
+
+```bash
+cd ~/my-project
+claude
+
+> Explain the architecture of this project
+> Add input validation to the user service
+> Write tests for the payment module
+```
+
+See [Claude Code CLI Guide](docs/claude-code-cli-guide.md) for detailed setup.
+
+---
+
+## Memory Management
+
+Maintain conversation context across sessions using memory management tools.
+
+### Why Memory?
+
+- AI remembers your project architecture
+- Previous conversations inform current responses
+- No need to repeat explanations each session
+
+### Quick Setup
+
+```bash
+# Install memory tools
+./scripts/setup-memory.sh
+
+# This installs:
+# - mem0: Intelligent memory layer
+# - ChromaDB: Vector database
+# - nomic-embed-text: Local embedding model
+```
+
+### Usage
+
+```bash
+# Add memory about your project
+mem add "This project uses FastAPI with PostgreSQL"
+
+# Search memories
+mem search "What database does this use?"
+
+# List all memories
+mem list
+
+# Use Aider with memory context
+aider-mem
+```
+
+### Architecture
+
+```
+┌──────────────────────────┐
+│   AI Coding Assistant    │
+└────────────┬─────────────┘
+             │
+    ┌────────▼────────┐
+    │   Memory Layer  │
+    │     (mem0)      │
+    └────────┬────────┘
+             │
+    ┌────────▼────────┐
+    │   Vector Store  │
+    │   (ChromaDB)    │
+    └────────┬────────┘
+             │
+    ┌────────▼────────┐
+    │   Embeddings    │
+    │  (nomic-embed)  │
+    └─────────────────┘
+```
+
+### Available Memory Solutions
+
+| Solution | Type | Best For |
+|----------|------|----------|
+| **mem0** | Intelligent memory | Automatic fact extraction |
+| **ChromaDB** | Vector database | Semantic search |
+| **LangChain Memory** | Framework | Custom integrations |
+| **Aider History** | Built-in | Session continuity |
+
+### Python Integration
+
+```python
+from mem0 import Memory
+
+m = Memory()
+
+# Add memory
+m.add("Project uses React with TypeScript", user_id="my-project")
+
+# Search
+results = m.search("What frontend framework?", user_id="my-project")
+```
+
+See [Memory Management Guide](docs/memory-management-guide.md) for full documentation.
 
 ---
 
