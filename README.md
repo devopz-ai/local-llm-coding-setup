@@ -1,245 +1,281 @@
 # Local LLM Coding Setup for Mac Mini M4 (32GB)
 
-A complete guide to setting up open-source LLMs for daily coding on Apple Silicon, with seamless integration between **free local models** and **enterprise cloud models** (AWS Bedrock).
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![macOS](https://img.shields.io/badge/macOS-Apple%20Silicon-blue)](https://www.apple.com/mac-mini/)
+[![Ollama](https://img.shields.io/badge/Ollama-0.18+-green)](https://ollama.com/)
 
-## Hardware Specifications
+A complete, production-ready setup for running open-source LLMs locally for AI-powered coding assistance on Apple Silicon, with seamless integration to enterprise cloud models (AWS Bedrock).
 
-- **Device**: Mac Mini M4
-- **RAM**: 32GB Unified Memory
-- **Recommended Models**: Up to 14B parameters (full speed), up to 32B (slower but usable)
+## Why This Setup?
+
+| Benefit | Description |
+|---------|-------------|
+| **Free Local Models** | Run Qwen, DeepSeek, Codestral locally - no API costs |
+| **Enterprise Ready** | Seamless integration with AWS Bedrock (Claude) |
+| **Privacy First** | Code stays on your machine with local models |
+| **Memory Persistence** | AI remembers your project context across sessions |
+| **Unified Interface** | One API for all models via LiteLLM |
 
 ## Quick Start
 
 ```bash
-# 1. Run the setup script
+# Clone the repository
+git clone https://github.com/devopz-ai/local-llm-coding-setup.git
+cd local-llm-coding-setup
+
+# Run initial setup (installs Aider, configures environment)
 ./scripts/setup.sh
 
-# 2. Pull recommended coding models
+# Download recommended models (~30GB)
 ./scripts/pull-models.sh
 
-# 3. Start the web UI
-./scripts/start-webui.sh
-
-# 4. For CLI coding assistant (like Claude Code)
+# Start coding with AI!
 ./scripts/start-aider.sh
 ```
 
-## Architecture Overview
+## System Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                       Your Coding Tools                          │
-│    Aider  │  OpenCode  │  Continue (VS Code)  │  Open WebUI     │
-└─────────────────────────┬───────────────────────────────────────┘
-                          │
-                          ▼
-                ┌───────────────────┐
-                │     LiteLLM       │  ← Unified API Gateway
-                │   (Port 4000)     │    OpenAI-compatible
-                └─────────┬─────────┘
-                          │
-         ┌────────────────┼────────────────┐
-         ▼                ▼                ▼
-   ┌───────────┐   ┌────────────┐   ┌────────────┐
-   │  Ollama   │   │    AWS     │   │   Other    │
-   │  (FREE)   │   │  Bedrock   │   │  Providers │
-   │           │   │            │   │            │
-   │ • Qwen    │   │ • Claude   │   │ • OpenAI   │
-   │ • DeepSeek│   │ • Llama    │   │ • Anthropic│
-   │ • Codestrl│   │ • Titan    │   │            │
-   └───────────┘   └────────────┘   └────────────┘
-       LOCAL          ENTERPRISE        CLOUD
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                           DEVELOPER TOOLS                                    │
+│                                                                              │
+│  ┌──────────┐  ┌──────────┐  ┌────────────┐  ┌──────────┐  ┌─────────────┐ │
+│  │  Aider   │  │ OpenCode │  │Claude Code │  │ Continue │  │  Open WebUI │ │
+│  │  (CLI)   │  │  (CLI)   │  │   (CLI)    │  │(VS Code) │  │    (Web)    │ │
+│  └────┬─────┘  └────┬─────┘  └─────┬──────┘  └────┬─────┘  └──────┬──────┘ │
+│       │             │              │              │               │         │
+│       └─────────────┴──────────────┴──────────────┴───────────────┘         │
+│                                    │                                         │
+└────────────────────────────────────┼─────────────────────────────────────────┘
+                                     │
+                                     ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│                         MEMORY LAYER (Optional)                             │
+│                                                                             │
+│    ┌─────────────────────────────────────────────────────────────────────┐ │
+│    │                            mem0                                      │ │
+│    │         Intelligent Memory for Persistent Context                    │ │
+│    │                                                                      │ │
+│    │   ┌─────────────┐    ┌─────────────┐    ┌─────────────┐            │ │
+│    │   │   SQLite    │    │  ChromaDB   │    │nomic-embed  │            │ │
+│    │   │  (History)  │    │ (Vectors)   │    │(Embeddings) │            │ │
+│    │   └─────────────┘    └─────────────┘    └─────────────┘            │ │
+│    └─────────────────────────────────────────────────────────────────────┘ │
+│                                                                             │
+└────────────────────────────────────┬────────────────────────────────────────┘
+                                     │
+                                     ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│                            API GATEWAY                                      │
+│                                                                             │
+│                    ┌───────────────────────────────┐                       │
+│                    │         LiteLLM Proxy         │                       │
+│                    │      http://localhost:4000     │                       │
+│                    │                               │                       │
+│                    │  • OpenAI-compatible API      │                       │
+│                    │  • Automatic model routing    │                       │
+│                    │  • Fallback support           │                       │
+│                    │  • Cost tracking              │                       │
+│                    └───────────────┬───────────────┘                       │
+│                                    │                                        │
+└────────────────────────────────────┼────────────────────────────────────────┘
+                                     │
+                  ┌──────────────────┼──────────────────┐
+                  │                  │                  │
+                  ▼                  ▼                  ▼
+┌─────────────────────┐  ┌─────────────────────┐  ┌─────────────────────┐
+│   LOCAL (FREE)      │  │   AWS BEDROCK       │  │   OTHER PROVIDERS   │
+│                     │  │                     │  │                     │
+│   ┌─────────────┐   │  │   ┌─────────────┐   │  │   ┌─────────────┐   │
+│   │   Ollama    │   │  │   │  Claude 3.5 │   │  │   │   OpenAI    │   │
+│   │             │   │  │   │   Sonnet    │   │  │   │   Anthropic │   │
+│   │ • Qwen 2.5  │   │  │   │   Opus      │   │  │   │   Groq      │   │
+│   │ • DeepSeek  │   │  │   │   Haiku     │   │  │   │             │   │
+│   │ • Codestral │   │  │   ├─────────────┤   │  │   └─────────────┘   │
+│   │ • Llama 3   │   │  │   │  Llama 3.1  │   │  │                     │
+│   └─────────────┘   │  │   │  Titan      │   │  │                     │
+│                     │  │   └─────────────┘   │  │                     │
+│   Cost: FREE        │  │   Cost: $$          │  │   Cost: $$$         │
+│   Privacy: 100%     │  │   Privacy: AWS      │  │   Privacy: API      │
+└─────────────────────┘  └─────────────────────┘  └─────────────────────┘
 ```
 
 ## Table of Contents
 
-1. [Prerequisites](#prerequisites)
-2. [Ollama Setup](#ollama-setup)
-3. [Recommended Models](#recommended-models)
-4. [LiteLLM Proxy](#litellm-proxy-unified-api)
-5. [AWS Bedrock Integration](#aws-bedrock-integration)
-6. [Web UI Options](#web-ui-options)
-7. [CLI Coding Tools](#cli-coding-tools)
-8. [Claude Code CLI](#claude-code-cli)
-9. [Memory Management](#memory-management)
-10. [IDE Integration](#ide-integration)
-11. [Performance Tuning](#performance-tuning)
-12. [Troubleshooting](#troubleshooting)
+1. [Hardware Requirements](#hardware-requirements)
+2. [Installation](#installation)
+3. [Available Tools](#available-tools)
+4. [Model Recommendations](#model-recommendations)
+5. [LiteLLM Proxy Setup](#litellm-proxy-setup)
+6. [AWS Bedrock Integration](#aws-bedrock-integration)
+7. [Memory Management](#memory-management)
+8. [CLI Tools](#cli-tools)
+9. [IDE Integration](#ide-integration)
+10. [Configuration Reference](#configuration-reference)
+11. [Troubleshooting](#troubleshooting)
 
 ---
 
-## Prerequisites
+## Hardware Requirements
 
-### 1. Install Homebrew (if not installed)
+| Component | Minimum | Recommended |
+|-----------|---------|-------------|
+| Chip | Apple M1 | Apple M4 |
+| RAM | 16GB | 32GB+ |
+| Storage | 50GB free | 100GB+ free |
+| macOS | 13.0+ | 14.0+ |
+
+### Model Size vs RAM
+
+| RAM | Comfortable Models | Possible (Slower) |
+|-----|-------------------|-------------------|
+| 16GB | 7B models | 14B models |
+| 32GB | 14B models | 32B models |
+| 64GB | 32B models | 70B models |
+
+---
+
+## Installation
+
+### Step 1: Prerequisites
 
 ```bash
+# Install Homebrew (if not installed)
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-```
 
-### 2. Install Ollama
-
-```bash
-# Download from official site (recommended)
-# Visit: https://ollama.com/download/mac
-
-# Or via Homebrew
+# Install Ollama
 brew install ollama
+
+# Start Ollama service
+ollama serve
 ```
 
-### 3. Verify Ollama Installation
+### Step 2: Clone and Setup
 
 ```bash
-ollama --version
-# Should show: ollama version 0.x.x
+# Clone repository
+git clone https://github.com/devopz-ai/local-llm-coding-setup.git
+cd local-llm-coding-setup
 
-# Start Ollama service (runs in background)
-ollama serve
+# Run setup script
+./scripts/setup.sh
+```
+
+### Step 3: Download Models
+
+```bash
+# Download recommended coding models
+./scripts/pull-models.sh
+```
+
+### Step 4: Start Coding
+
+```bash
+# Option A: Quick start with Aider
+./scripts/start-aider.sh
+
+# Option B: Start LiteLLM for all tools
+./scripts/start-litellm.sh
 ```
 
 ---
 
-## Ollama Setup
+## Available Tools
 
-### Starting Ollama
+| Tool | Type | Best For | Install |
+|------|------|----------|---------|
+| **Aider** | CLI | Pair programming, git integration | `pip install aider-chat` |
+| **OpenCode** | CLI | Simple terminal coding | `brew install opencode` |
+| **Claude Code** | CLI | Official Anthropic CLI | `brew install claude-code` |
+| **Continue** | IDE | VS Code/Cursor integration | VS Code Extension |
+| **Open WebUI** | Web | ChatGPT-like interface | Docker or pip |
 
-Ollama runs as a background service. You can start it in several ways:
+### Tool Comparison
 
-```bash
-# Option 1: Start manually (foreground)
-ollama serve
-
-# Option 2: Start via macOS app
-# Just open the Ollama app from Applications
-
-# Option 3: Check if already running
-curl http://localhost:11434/api/tags
 ```
-
-### Verify Ollama is Running
-
-```bash
-# Check status
-curl http://localhost:11434/
-
-# List installed models
-ollama list
+┌─────────────────────────────────────────────────────────────────┐
+│                        TOOL COMPARISON                          │
+├─────────────────┬──────────┬──────────┬────────────┬───────────┤
+│ Feature         │  Aider   │ OpenCode │Claude Code │ Continue  │
+├─────────────────┼──────────┼──────────┼────────────┼───────────┤
+│ Interface       │ Terminal │ Terminal │  Terminal  │  VS Code  │
+│ File Editing    │    ✓     │    ✓     │     ✓      │     ✓     │
+│ Git Integration │  Strong  │   Good   │   Strong   │   Basic   │
+│ Local Models    │  Native  │Via Proxy │ Via Proxy  │  Native   │
+│ Bedrock Support │Via Proxy │Via Proxy │   Native   │ Via Proxy │
+│ Memory/Context  │  Chat    │  Config  │  Built-in  │  Context  │
+│ Learning Curve  │  Medium  │   Low    │    Low     │   Low     │
+└─────────────────┴──────────┴──────────┴────────────┴───────────┘
 ```
 
 ---
 
-## Recommended Models
+## Model Recommendations
 
-### For 32GB RAM Mac Mini M4
+### For Coding on 32GB Mac
 
-| Model | Size | Use Case | Command |
-|-------|------|----------|---------|
-| **qwen2.5-coder:7b** | ~4.5GB | Fast coding, daily use | `ollama pull qwen2.5-coder:7b` |
-| **qwen2.5-coder:14b** | ~9GB | Better quality, still fast | `ollama pull qwen2.5-coder:14b` |
-| **deepseek-coder-v2:16b** | ~10GB | Excellent for complex code | `ollama pull deepseek-coder-v2:16b` |
-| **codestral:22b** | ~13GB | Mistral's coding model | `ollama pull codestral:22b` |
-| **qwen2.5-coder:32b** | ~20GB | Best quality (slower) | `ollama pull qwen2.5-coder:32b` |
+| Model | Size | Speed | Quality | Best For |
+|-------|------|-------|---------|----------|
+| `qwen2.5-coder:7b` | 4.5GB | Fast | Good | Quick tasks, autocomplete |
+| `qwen2.5-coder:14b` | 9GB | Medium | Better | **Daily coding (recommended)** |
+| `qwen2.5-coder:32b` | 20GB | Slow | Best | Complex refactoring |
+| `deepseek-coder-v2:16b` | 10GB | Medium | Great | Algorithm design |
+| `codestral:22b` | 13GB | Medium | Good | IDE integration |
 
-### Pull Recommended Models
+### Pull Models
 
 ```bash
-# Essential (start with these)
+# Essential models
 ollama pull qwen2.5-coder:7b
 ollama pull qwen2.5-coder:14b
 
-# Additional (recommended)
+# Additional models
 ollama pull deepseek-coder-v2:16b
 ollama pull codestral:22b
-
-# For general chat/reasoning
-ollama pull llama3.2:8b
-ollama pull qwen2.5:14b
 ```
 
-### Model Comparison
+### Task-Based Recommendations
 
-#### Qwen2.5-Coder (Recommended)
-- **Strengths**: Excellent code completion, multi-language support, fast inference
-- **Best for**: Daily coding, code review, refactoring
-- **Languages**: Python, JavaScript, TypeScript, Go, Rust, Java, C++, and 90+ more
-
-#### DeepSeek-Coder-V2
-- **Strengths**: Strong reasoning, good at complex algorithms
-- **Best for**: Algorithm design, debugging complex issues
-- **Languages**: Especially good with Python and systems languages
-
-#### Codestral
-- **Strengths**: Fast, good at fill-in-the-middle completion
-- **Best for**: IDE integration, autocomplete
-- **Languages**: 80+ programming languages
-
-### Test a Model
-
-```bash
-# Interactive chat
-ollama run qwen2.5-coder:7b
-
-# One-shot query
-ollama run qwen2.5-coder:7b "Write a Python function to merge two sorted lists"
-
-# Exit interactive mode
-/bye
-```
+| Task | Local Model (FREE) | Cloud Model ($$) |
+|------|-------------------|------------------|
+| Quick questions | qwen-coder-fast | claude-haiku |
+| Code completion | qwen-coder | claude-haiku |
+| Code review | qwen-coder | claude-sonnet |
+| Refactoring | qwen-coder-best | claude-sonnet |
+| Architecture | qwen-coder-best | claude-opus |
 
 ---
 
-## LiteLLM Proxy (Unified API)
+## LiteLLM Proxy Setup
 
-LiteLLM provides a unified OpenAI-compatible API that routes requests to multiple backends. This allows you to:
+LiteLLM provides a unified OpenAI-compatible API for all models.
 
-- **Switch seamlessly** between free local models and enterprise cloud models
-- **Use any tool** that supports OpenAI API (most do!)
-- **Add fallbacks** - if local model fails, fallback to cloud
-- **Track costs** across all providers
-
-### Install LiteLLM
+### Install and Start
 
 ```bash
-# Run setup script
+# Install
 ./scripts/setup-litellm.sh
 
-# Or manually
-pip install 'litellm[proxy]'
-```
-
-### Start LiteLLM Proxy
-
-```bash
+# Start proxy
 ./scripts/start-litellm.sh
 
-# Or manually
-litellm --config ~/.litellm/config.yaml --port 4000
-```
-
-### Using LiteLLM
-
-Once running, all tools can use the unified API:
-
-```bash
-# API endpoint
-http://localhost:4000
-
-# API key (any string works for local)
-sk-1234
+# Verify
+curl http://localhost:4000/v1/models
 ```
 
 ### Available Models via LiteLLM
 
-| Model Name | Backend | Cost | Best For |
-|------------|---------|------|----------|
-| `qwen-coder-fast` | Ollama | FREE | Quick tasks |
-| `qwen-coder` | Ollama | FREE | Daily coding |
-| `qwen-coder-best` | Ollama | FREE | Best local quality |
-| `deepseek-coder` | Ollama | FREE | Algorithms |
-| `claude-sonnet` | Bedrock | $$ | Complex tasks |
-| `claude-opus` | Bedrock | $$$ | Most capable |
-| `claude-haiku` | Bedrock | $ | Fast & cheap |
+| Model Name | Backend | Cost |
+|------------|---------|------|
+| `qwen-coder-fast` | Ollama | FREE |
+| `qwen-coder` | Ollama | FREE |
+| `qwen-coder-best` | Ollama | FREE |
+| `deepseek-coder` | Ollama | FREE |
+| `claude-sonnet` | Bedrock | $$ |
+| `claude-opus` | Bedrock | $$$ |
+| `claude-haiku` | Bedrock | $ |
 
-### Example: Using with curl
+### Usage Example
 
 ```bash
 # Use local model (FREE)
@@ -248,16 +284,7 @@ curl http://localhost:4000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -d '{
     "model": "qwen-coder",
-    "messages": [{"role": "user", "content": "Write a Python hello world"}]
-  }'
-
-# Use Bedrock Claude (requires AWS credentials)
-curl http://localhost:4000/v1/chat/completions \
-  -H "Authorization: Bearer sk-1234" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "model": "claude-sonnet",
-    "messages": [{"role": "user", "content": "Write a Python hello world"}]
+    "messages": [{"role": "user", "content": "Write a Python quicksort"}]
   }'
 ```
 
@@ -265,19 +292,7 @@ curl http://localhost:4000/v1/chat/completions \
 
 ## AWS Bedrock Integration
 
-AWS Bedrock provides enterprise-grade access to Claude, Llama, and other models with:
-- **Security**: Your data stays in your AWS account
-- **Compliance**: SOC2, HIPAA, etc.
-- **No rate limits**: Based on your provisioned capacity
-- **Cost control**: Pay per token, track via AWS billing
-
-### Prerequisites
-
-1. **AWS Account** with Bedrock access enabled
-2. **Model Access**: Request access to models in AWS Console
-3. **AWS CLI** configured with credentials
-
-### Setup AWS CLI
+### Setup AWS Credentials
 
 ```bash
 # Install AWS CLI
@@ -285,432 +300,157 @@ brew install awscli
 
 # Configure credentials
 aws configure
-# Enter: AWS Access Key ID, Secret Access Key, Region (us-west-2)
+# Enter: Access Key, Secret Key, Region (us-west-2)
 
 # Verify
 aws sts get-caller-identity
 ```
 
-### Enable Bedrock Model Access
+### Enable Model Access
 
-1. Go to AWS Console > Bedrock > Model access
-2. Request access to:
-   - Anthropic Claude 3.5 Sonnet
-   - Anthropic Claude 3 Opus
-   - Anthropic Claude 3.5 Haiku
-   - Meta Llama 3.1 (optional)
-3. Wait for approval (usually instant for Claude)
+1. Go to [AWS Bedrock Console](https://console.aws.amazon.com/bedrock/)
+2. Navigate to **Model access**
+3. Request access to Claude models
+4. Wait for approval (usually instant)
 
-### Available Bedrock Models
-
-| Model | LiteLLM Name | Use Case |
-|-------|--------------|----------|
-| Claude 3.5 Sonnet | `claude-sonnet` | Best balance of speed/quality |
-| Claude 3 Opus | `claude-opus` | Most capable, complex tasks |
-| Claude 3.5 Haiku | `claude-haiku` | Fast, economical |
-| Llama 3.1 70B | `bedrock-llama` | Open source alternative |
-| Amazon Titan | `titan` | AWS native model |
-
-### Using Bedrock with Aider
+### Use Bedrock Models
 
 ```bash
-# Start LiteLLM first
-./scripts/start-litellm.sh
+# Via LiteLLM
+curl http://localhost:4000/v1/chat/completions \
+  -H "Authorization: Bearer sk-1234" \
+  -d '{"model": "claude-sonnet", "messages": [{"role": "user", "content": "Hello"}]}'
 
-# Then use Aider with Bedrock Claude
-aider --openai-api-base http://localhost:4000 \
-      --openai-api-key sk-1234 \
-      --model claude-sonnet
+# Via Aider
+aider --openai-api-base http://localhost:4000 --openai-api-key sk-1234 --model claude-sonnet
 ```
-
-### Cost Estimation (Bedrock)
-
-| Model | Input (per 1M tokens) | Output (per 1M tokens) |
-|-------|----------------------|------------------------|
-| Claude 3.5 Sonnet | $3.00 | $15.00 |
-| Claude 3 Opus | $15.00 | $75.00 |
-| Claude 3.5 Haiku | $0.80 | $4.00 |
-
-*Tip: Use free local models for routine tasks, Bedrock for complex ones*
-
----
-
-## Web UI Options
-
-### Option 1: Open WebUI (Recommended)
-
-The most popular and feature-rich web interface for Ollama.
-
-#### Install via Docker
-
-```bash
-# Install Docker if not present
-brew install --cask docker
-
-# Start Docker Desktop, then run:
-docker run -d -p 3000:8080 \
-  --add-host=host.docker.internal:host-gateway \
-  -v open-webui:/app/backend/data \
-  --name open-webui \
-  --restart always \
-  ghcr.io/open-webui/open-webui:main
-```
-
-#### Access
-- URL: http://localhost:3000
-- Create an account on first visit (local only)
-- Models auto-detected from Ollama
-
-#### Install via pip (Alternative, no Docker)
-
-```bash
-pip install open-webui
-open-webui serve
-```
-
-### Option 2: Ollama Web UI (Lightweight)
-
-```bash
-# Install
-npm install -g ollama-webui-lite
-
-# Run
-ollama-webui-lite
-```
-
-### Option 3: Text Generation WebUI (Advanced)
-
-For users who want maximum control:
-
-```bash
-# Clone repository
-git clone https://github.com/oobabooga/text-generation-webui
-cd text-generation-webui
-
-# Run installer
-./start_macos.sh
-```
-
----
-
-## CLI Coding Tools
-
-### Aider - AI Pair Programming (Highly Recommended)
-
-Aider is the closest experience to Claude Code for local LLMs.
-
-#### Install Aider
-
-```bash
-# Via pip
-pip install aider-chat
-
-# Or via pipx (recommended for isolation)
-brew install pipx
-pipx install aider-chat
-```
-
-#### Configure for Ollama (Direct)
-
-```bash
-# Set environment variable
-export OLLAMA_API_BASE=http://localhost:11434
-
-# Run with Ollama model
-aider --model ollama/qwen2.5-coder:14b
-```
-
-#### Configure for LiteLLM (Recommended - supports all models)
-
-```bash
-# Start LiteLLM first
-./scripts/start-litellm.sh
-
-# Use local model (FREE)
-aider --openai-api-base http://localhost:4000 \
-      --openai-api-key sk-1234 \
-      --model qwen-coder
-
-# Use Bedrock Claude (Enterprise)
-aider --openai-api-base http://localhost:4000 \
-      --openai-api-key sk-1234 \
-      --model claude-sonnet
-```
-
-#### Create Aliases for Easy Access
-
-Add to `~/.zshrc`:
-
-```bash
-# Aider with local LLM (direct Ollama)
-alias aider-local="aider --model ollama/qwen2.5-coder:14b"
-alias aider-fast="aider --model ollama/qwen2.5-coder:7b"
-
-# Aider with LiteLLM (any model)
-alias aider-lite="aider --openai-api-base http://localhost:4000 --openai-api-key sk-1234"
-alias aider-claude="aider --openai-api-base http://localhost:4000 --openai-api-key sk-1234 --model claude-sonnet"
-```
-
-#### Usage Examples
-
-```bash
-# Start in a project directory
-cd /path/to/your/project
-aider-local
-
-# Add files to context
-/add src/main.py src/utils.py
-
-# Ask for changes
-> Add error handling to the parse_config function
-
-# Run tests
-/run pytest
-
-# Commit changes
-/commit
-```
-
-### OpenCode - Alternative CLI Assistant
-
-Another terminal-based AI coding assistant.
-
-```bash
-# Install
-./scripts/setup-opencode.sh
-
-# Use with LiteLLM
-opencode
-```
-
-### llm CLI
-
-```bash
-# Install
-pip install llm
-llm install llm-ollama
-
-# Use
-llm -m qwen2.5-coder:7b "Explain this code: $(cat myfile.py)"
-```
-
----
-
-## Claude Code CLI
-
-Claude Code is Anthropic's official CLI for AI-powered coding. Use it with AWS Bedrock for enterprise deployments.
-
-### Installation
-
-```bash
-# Via Homebrew
-brew install claude-code
-
-# Or via npm
-npm install -g @anthropic-ai/claude-code
-```
-
-### Configure for Bedrock
-
-```bash
-# Set up AWS credentials
-aws configure
-
-# Enable Bedrock provider
-export CLAUDE_CODE_USE_BEDROCK=1
-export AWS_REGION=us-west-2
-
-# Run Claude Code
-claude
-```
-
-### Configuration File
-
-Create `~/.claude-code/config.json`:
-
-```json
-{
-  "provider": "bedrock",
-  "aws": {
-    "region": "us-west-2"
-  },
-  "model": "anthropic.claude-3-5-sonnet-20241022-v2:0"
-}
-```
-
-### Usage
-
-```bash
-cd ~/my-project
-claude
-
-> Explain the architecture of this project
-> Add input validation to the user service
-> Write tests for the payment module
-```
-
-See [Claude Code CLI Guide](docs/claude-code-cli-guide.md) for detailed setup.
 
 ---
 
 ## Memory Management
 
-Maintain conversation context across sessions using memory management tools.
+Keep conversation context across sessions using mem0.
 
-### Why Memory?
-
-- AI remembers your project architecture
-- Previous conversations inform current responses
-- No need to repeat explanations each session
-
-### Quick Setup
+### Setup
 
 ```bash
-# Install memory tools
 ./scripts/setup-memory.sh
-
-# This installs:
-# - mem0: Intelligent memory layer
-# - ChromaDB: Vector database
-# - nomic-embed-text: Local embedding model
 ```
 
 ### Usage
 
 ```bash
-# Add memory about your project
+# Add project context
 mem add "This project uses FastAPI with PostgreSQL"
+mem add "Authentication uses JWT tokens"
 
 # Search memories
-mem search "What database does this use?"
+mem search "What database?"
 
 # List all memories
 mem list
 
-# Use Aider with memory context
+# Use Aider with memory
 aider-mem
 ```
 
-### Architecture
+### How It Works
 
 ```
-┌──────────────────────────┐
-│   AI Coding Assistant    │
-└────────────┬─────────────┘
-             │
-    ┌────────▼────────┐
-    │   Memory Layer  │
-    │     (mem0)      │
-    └────────┬────────┘
-             │
-    ┌────────▼────────┐
-    │   Vector Store  │
-    │   (ChromaDB)    │
-    └────────┬────────┘
-             │
-    ┌────────▼────────┐
-    │   Embeddings    │
-    │  (nomic-embed)  │
-    └─────────────────┘
+Session 1                    Session 2
+─────────                    ─────────
+User: "Uses FastAPI"         User: "What framework?"
+         │                            │
+         ▼                            ▼
+    ┌─────────┐                 ┌─────────┐
+    │  mem0   │ ───────────────▶│  mem0   │
+    │  SAVE   │    persisted    │ RECALL  │
+    └─────────┘                 └─────────┘
+                                      │
+                                      ▼
+                               AI: "FastAPI"
 ```
 
-### Available Memory Solutions
+---
 
-| Solution | Type | Best For |
-|----------|------|----------|
-| **mem0** | Intelligent memory | Automatic fact extraction |
-| **ChromaDB** | Vector database | Semantic search |
-| **LangChain Memory** | Framework | Custom integrations |
-| **Aider History** | Built-in | Session continuity |
+## CLI Tools
 
-### Python Integration
+### Aider (Recommended)
 
-```python
-from mem0 import Memory
+```bash
+# Direct Ollama
+aider --model ollama/qwen2.5-coder:14b
 
-m = Memory()
+# Via LiteLLM (all models)
+aider --openai-api-base http://localhost:4000 --openai-api-key sk-1234 --model qwen-coder
 
-# Add memory
-m.add("Project uses React with TypeScript", user_id="my-project")
-
-# Search
-results = m.search("What frontend framework?", user_id="my-project")
+# With Bedrock Claude
+aider --openai-api-base http://localhost:4000 --openai-api-key sk-1234 --model claude-sonnet
 ```
 
-See [Memory Management Guide](docs/memory-management-guide.md) for full documentation.
+**Aider Commands:**
+```
+/add <file>     Add file to context
+/drop <file>    Remove file
+/run <cmd>      Run shell command
+/diff           Show changes
+/commit         Commit changes
+/undo           Undo last change
+/help           Show all commands
+```
+
+### OpenCode
+
+```bash
+# Install
+brew install opencode
+
+# Start
+opencode
+```
+
+### Claude Code
+
+```bash
+# Install
+brew install claude-code
+
+# Configure for Bedrock
+export CLAUDE_CODE_USE_BEDROCK=1
+export AWS_REGION=us-west-2
+
+# Start
+claude
+```
 
 ---
 
 ## IDE Integration
 
-### VS Code - Continue Extension (Recommended)
+### VS Code - Continue Extension
 
-Continue provides AI-powered coding assistance directly in VS Code.
-
-#### Install
-
-1. Open VS Code
-2. Go to Extensions (Cmd+Shift+X)
-3. Search for "Continue"
-4. Install "Continue - Codestral, Claude, and more"
-
-#### Configure for Ollama (Direct)
-
-Create/edit `~/.continue/config.json`:
+1. Install Continue extension from VS Code marketplace
+2. Configure `~/.continue/config.json`:
 
 ```json
 {
   "models": [
     {
-      "title": "Qwen2.5 Coder 14B",
-      "provider": "ollama",
-      "model": "qwen2.5-coder:14b",
-      "apiBase": "http://localhost:11434"
-    },
-    {
-      "title": "Qwen2.5 Coder 7B (Fast)",
-      "provider": "ollama",
-      "model": "qwen2.5-coder:7b",
-      "apiBase": "http://localhost:11434"
-    }
-  ],
-  "tabAutocompleteModel": {
-    "title": "Qwen2.5 Coder 7B",
-    "provider": "ollama",
-    "model": "qwen2.5-coder:7b"
-  }
-}
-```
-
-#### Configure for LiteLLM (All Models)
-
-```json
-{
-  "models": [
-    {
-      "title": "Local - Qwen Coder",
+      "title": "Local Qwen (FREE)",
       "provider": "openai",
       "model": "qwen-coder",
       "apiBase": "http://localhost:4000",
       "apiKey": "sk-1234"
     },
     {
-      "title": "Bedrock - Claude Sonnet",
+      "title": "Bedrock Claude",
       "provider": "openai",
       "model": "claude-sonnet",
-      "apiBase": "http://localhost:4000",
-      "apiKey": "sk-1234"
-    },
-    {
-      "title": "Bedrock - Claude Opus",
-      "provider": "openai",
-      "model": "claude-opus",
       "apiBase": "http://localhost:4000",
       "apiKey": "sk-1234"
     }
   ],
   "tabAutocompleteModel": {
-    "title": "Local Fast",
     "provider": "openai",
     "model": "qwen-coder-fast",
     "apiBase": "http://localhost:4000",
@@ -719,246 +459,201 @@ Create/edit `~/.continue/config.json`:
 }
 ```
 
-#### Usage
-
-- **Chat**: Cmd+L to open chat panel
-- **Autocomplete**: Tab to accept suggestions
-- **Edit**: Cmd+I to edit selected code
-- **Explain**: Select code, right-click, "Continue: Explain"
-
 ### Cursor IDE
 
-Cursor has built-in support for Ollama:
-
-1. Open Cursor Settings
-2. Go to Models
-3. Add Ollama endpoint: `http://localhost:11434`
-4. Or add LiteLLM: `http://localhost:4000` with key `sk-1234`
-5. Select your model
-
-### Neovim/Vim
-
-Use [avante.nvim](https://github.com/yetone/avante.nvim) or [codecompanion.nvim](https://github.com/olimorris/codecompanion.nvim):
-
-```lua
--- Example with codecompanion.nvim
-require("codecompanion").setup({
-  adapters = {
-    ollama = function()
-      return require("codecompanion.adapters").extend("ollama", {
-        schema = {
-          model = { default = "qwen2.5-coder:14b" },
-        },
-      })
-    end,
-  },
-})
-```
+1. Open Cursor Settings → Models
+2. Add endpoint: `http://localhost:4000`
+3. API Key: `sk-1234`
+4. Select model
 
 ---
 
-## Performance Tuning
-
-### Optimize Ollama for M4
-
-Create `~/.ollama/config.json` (if it doesn't exist):
-
-```json
-{
-  "gpu_layers": -1,
-  "num_thread": 8,
-  "num_ctx": 8192
-}
-```
+## Configuration Reference
 
 ### Environment Variables
 
 Add to `~/.zshrc`:
 
 ```bash
-# Ollama settings
+# Ollama
+export OLLAMA_API_BASE=http://localhost:11434
 export OLLAMA_NUM_PARALLEL=2
 export OLLAMA_MAX_LOADED_MODELS=2
 export OLLAMA_KEEP_ALIVE="5m"
 
-# For larger context windows (uses more memory)
-export OLLAMA_NUM_CTX=8192
+# LiteLLM
+export OPENAI_API_BASE=http://localhost:4000
+export OPENAI_API_KEY=sk-1234
+
+# AWS Bedrock
+export AWS_DEFAULT_REGION=us-west-2
 ```
 
-### Memory Management
+### Shell Aliases
 
 ```bash
-# Check memory usage
-ollama ps
+# Aider shortcuts
+alias aider-local="aider --model ollama/qwen2.5-coder:14b"
+alias aider-fast="aider --model ollama/qwen2.5-coder:7b"
+alias aider-claude="aider --openai-api-base http://localhost:4000 --openai-api-key sk-1234 --model claude-sonnet"
 
-# Unload models to free memory
-ollama stop qwen2.5-coder:7b
+# OpenCode shortcuts
+alias oc="opencode"
+alias oc-fast="OPENCODE_MODEL=qwen-coder-fast opencode"
 
-# Set model to unload after idle time (in Modelfile)
-# PARAMETER num_keep 0
+# Memory
+alias mem="memory-helper.py"
+alias aider-mem="aider-with-memory.sh"
 ```
 
-### Model Performance Tips
+### File Locations
 
-| Scenario | Recommendation |
-|----------|---------------|
-| Quick questions | Use 7B models (FREE) |
-| Complex refactoring | Use 14B+ or Claude (Bedrock) |
-| Multiple models needed | Keep max 2 loaded |
-| Long context needed | Increase `num_ctx` to 16384 |
+| Config | Location |
+|--------|----------|
+| Ollama | `~/.ollama/` |
+| LiteLLM | `~/.litellm/config.yaml` |
+| mem0 | `~/.mem0/config.yaml` |
+| Continue | `~/.continue/config.json` |
+| Aider | `~/.aider.conf.yml` |
+| AWS | `~/.aws/credentials` |
 
 ---
 
 ## Troubleshooting
 
-### Ollama Not Responding
+### Ollama Issues
 
 ```bash
 # Check if running
-pgrep ollama
+curl http://localhost:11434/
 
-# Restart Ollama
-pkill ollama
-ollama serve
+# Restart
+pkill ollama && ollama serve
 
-# Check logs
-tail -f ~/.ollama/logs/server.log
-```
-
-### Model Download Stuck
-
-```bash
-# Cancel and retry
-# Press Ctrl+C, then:
-ollama pull qwen2.5-coder:7b
-
-# If corrupted, remove and re-pull
-ollama rm qwen2.5-coder:7b
-ollama pull qwen2.5-coder:7b
-```
-
-### Out of Memory
-
-```bash
-# Check what's loaded
+# Check loaded models
 ollama ps
 
-# Stop unused models
-ollama stop <model-name>
-
-# Use smaller model
-ollama run qwen2.5-coder:7b
+# View logs
+tail -f ~/.ollama/logs/server.log
 ```
 
 ### LiteLLM Issues
 
 ```bash
-# Check if running
+# Check health
 curl http://localhost:4000/health
 
-# View logs
-litellm --config ~/.litellm/config.yaml --port 4000 --debug
-
-# Test model list
+# List models
 curl http://localhost:4000/v1/models
+
+# Restart
+pkill -f litellm && ./scripts/start-litellm.sh
 ```
 
-### Bedrock Connection Issues
+### Memory Issues
 
 ```bash
-# Verify AWS credentials
+# Check memory usage
+ollama ps
+
+# Unload models
+ollama stop qwen2.5-coder:32b
+
+# Use smaller model
+ollama run qwen2.5-coder:7b
+```
+
+### AWS Bedrock Issues
+
+```bash
+# Verify credentials
 aws sts get-caller-identity
 
-# Check Bedrock access
-aws bedrock list-foundation-models --query "modelSummaries[?contains(modelId, 'claude')]"
-
-# Ensure region is correct (us-west-2 recommended)
-aws configure get region
-```
-
-### Slow Generation
-
-1. Use smaller quantized model
-2. Reduce context length
-3. Close other memory-intensive apps
-4. Check Activity Monitor for memory pressure
-
-### Web UI Can't Connect to Ollama
-
-```bash
-# Ensure Ollama allows external connections
-# For Docker, use host.docker.internal:11434
-
-# Test connectivity
-curl http://localhost:11434/api/tags
+# Check model access
+aws bedrock list-foundation-models --query "modelSummaries[?contains(modelId,'claude')]"
 ```
 
 ---
 
-## Daily Workflow
+## Documentation
 
-### Recommended Daily Setup
-
-1. **Morning**: Ensure Ollama is running (check menu bar or `ollama ps`)
-2. **Start LiteLLM** for unified access: `./scripts/start-litellm.sh`
-3. **For quick coding**: Use Aider with local model (FREE)
-4. **For complex tasks**: Switch to Bedrock Claude
-5. **For IDE work**: Use Continue in VS Code
-6. **For exploration/learning**: Use Open WebUI
-
-### Sample Workflow
-
-```bash
-# Start your day - start LiteLLM proxy
-./scripts/start-litellm.sh &
-
-# Quick question (FREE - local)
-curl http://localhost:4000/v1/chat/completions \
-  -H "Authorization: Bearer sk-1234" \
-  -d '{"model": "qwen-coder-fast", "messages": [{"role": "user", "content": "Quick: how to reverse a list in Python?"}]}'
-
-# Coding session with local model (FREE)
-aider --openai-api-base http://localhost:4000 --openai-api-key sk-1234 --model qwen-coder
-
-# Complex refactoring with Claude (Bedrock)
-aider --openai-api-base http://localhost:4000 --openai-api-key sk-1234 --model claude-sonnet
-
-# In Aider:
-/add src/search.py
-> Refactor this to use async/await with proper error handling
-/diff
-/commit "Refactor search to async with error handling"
-```
-
-### Cost-Effective Strategy
-
-| Task Type | Model | Cost |
-|-----------|-------|------|
-| Quick questions | qwen-coder-fast | FREE |
-| Daily coding | qwen-coder | FREE |
-| Code review | qwen-coder | FREE |
-| Complex debugging | claude-haiku | $ |
-| Major refactoring | claude-sonnet | $$ |
-| Architecture design | claude-opus | $$$ |
+| Document | Description |
+|----------|-------------|
+| [Architecture](docs/architecture.md) | Detailed system architecture |
+| [Models Comparison](docs/models-comparison.md) | In-depth model comparison |
+| [LiteLLM + Bedrock](docs/litellm-bedrock-guide.md) | Enterprise integration guide |
+| [OpenCode Guide](docs/opencode-local-llm-guide.md) | OpenCode setup and usage |
+| [Claude Code Guide](docs/claude-code-cli-guide.md) | Claude Code CLI setup |
+| [Memory Guide](docs/memory-management-guide.md) | Memory system documentation |
+| [Troubleshooting](docs/troubleshooting.md) | Common issues and fixes |
 
 ---
 
-## Additional Resources
+## Project Structure
 
-- [Ollama Documentation](https://ollama.com/docs)
-- [Ollama Model Library](https://ollama.com/library)
-- [LiteLLM Documentation](https://docs.litellm.ai/)
-- [AWS Bedrock Documentation](https://docs.aws.amazon.com/bedrock/)
-- [Aider Documentation](https://aider.chat/)
-- [Continue Documentation](https://docs.continue.dev/)
-- [Open WebUI Documentation](https://docs.openwebui.com/)
+```
+local-llm-coding-setup/
+├── README.md                    # This file
+├── CLAUDE.md                    # AI assistant context
+├── LICENSE                      # MIT License
+├── .github/
+│   ├── ISSUE_TEMPLATE/          # Issue templates
+│   ├── PULL_REQUEST_TEMPLATE.md # PR template
+│   ├── CONTRIBUTING.md          # Contribution guidelines
+│   └── workflows/               # CI/CD workflows
+├── scripts/
+│   ├── setup.sh                 # Initial setup
+│   ├── setup-litellm.sh         # LiteLLM setup
+│   ├── setup-opencode.sh        # OpenCode setup
+│   ├── setup-memory.sh          # Memory setup
+│   ├── pull-models.sh           # Model download
+│   ├── start-litellm.sh         # Start LiteLLM
+│   ├── start-webui.sh           # Start Open WebUI
+│   └── start-aider.sh           # Start Aider
+├── configs/
+│   ├── litellm-config.yaml      # LiteLLM config
+│   ├── mem0-config.yaml         # Memory config
+│   ├── continue-config.json     # VS Code config
+│   └── aider-config.yml         # Aider config
+└── docs/
+    ├── architecture.md          # System architecture
+    ├── models-comparison.md     # Model details
+    └── troubleshooting.md       # Troubleshooting
+```
 
 ---
 
 ## Contributing
 
-Feel free to submit issues and enhancement requests!
+Contributions are welcome! Please read our [Contributing Guidelines](.github/CONTRIBUTING.md) first.
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes
+4. Push to the branch
+5. Open a Pull Request
+
+---
 
 ## License
 
-MIT License - Feel free to use and modify as needed.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
+
+## Author
+
+**Rashed Ahmed**
+
+- Email: rashed.ahmed@devopz.ai
+- GitHub: [@devopz-ai](https://github.com/devopz-ai)
+
+---
+
+## Acknowledgments
+
+- [Ollama](https://ollama.com/) - Local model serving
+- [LiteLLM](https://github.com/BerriAI/litellm) - Unified LLM gateway
+- [Aider](https://aider.chat/) - AI pair programming
+- [mem0](https://mem0.ai/) - Memory layer for LLMs
+- [Continue](https://continue.dev/) - VS Code AI extension
