@@ -45,38 +45,36 @@ opencode --help
 
 ## Configuration for Local LLMs
 
-OpenCode supports multiple providers. To use local LLMs, you'll configure it to use either:
-1. **Ollama directly** (simpler)
-2. **LiteLLM proxy** (more flexible, supports fallbacks)
+OpenCode uses OpenAI-compatible APIs and reads configuration from **environment variables**. This is the most reliable method.
 
-### Method 1: Direct Ollama Connection
+### Method 1: Environment Variables (Recommended)
 
-Create or edit `~/.opencode/config.json`:
-
-```json
-{
-  "provider": "ollama",
-  "model": "qwen2.5-coder:14b",
-  "ollamaHost": "http://localhost:11434",
-  "options": {
-    "temperature": 0.3,
-    "numCtx": 8192
-  }
-}
-```
-
-Or use environment variables:
+OpenCode reads these environment variables for OpenAI-compatible providers:
 
 ```bash
 # Add to ~/.zshrc
-export OPENCODE_PROVIDER=ollama
-export OPENCODE_MODEL=qwen2.5-coder:14b
-export OLLAMA_HOST=http://localhost:11434
+export OPENAI_API_BASE=http://localhost:4000    # LiteLLM proxy
+export OPENAI_API_KEY=sk-litellm-master-key-change-me
+export OPENAI_MODEL=qwen2-5-coder-7b            # Model name in LiteLLM
 ```
 
-### Method 2: Via LiteLLM (Recommended)
+Then run:
+```bash
+source ~/.zshrc
+opencode
+```
 
-LiteLLM provides an OpenAI-compatible API, which OpenCode supports natively.
+Or run with inline environment variables:
+```bash
+OPENAI_API_BASE=http://localhost:4000 \
+OPENAI_API_KEY=sk-litellm-master-key-change-me \
+OPENAI_MODEL=qwen2-5-coder-7b \
+opencode
+```
+
+### Method 2: Via LiteLLM Proxy
+
+LiteLLM provides a unified OpenAI-compatible API for all your local models.
 
 1. **Start LiteLLM**:
 ```bash
@@ -85,14 +83,28 @@ LiteLLM provides an OpenAI-compatible API, which OpenCode supports natively.
 litellm --config ~/.litellm/config.yaml --port 4000
 ```
 
-2. **Configure OpenCode** (`~/.opencode/config.json`):
+2. **Set environment variables**:
+```bash
+export OPENAI_API_BASE=http://localhost:4000
+export OPENAI_API_KEY=sk-litellm-master-key-change-me
+export OPENAI_MODEL=qwen2-5-coder-7b
+```
+
+3. **Run OpenCode**:
+```bash
+opencode
+```
+
+### Method 3: Config File (Alternative)
+
+You can also use a config file at `~/.opencode/config.json`:
 
 ```json
 {
   "provider": "openai-compatible",
   "apiBase": "http://localhost:4000",
-  "apiKey": "sk-1234",
-  "model": "qwen-coder",
+  "apiKey": "sk-litellm-master-key-change-me",
+  "model": "qwen2-5-coder-7b",
   "options": {
     "temperature": 0.3
   }
