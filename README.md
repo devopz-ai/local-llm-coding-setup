@@ -18,18 +18,37 @@ A complete, production-ready setup for running open-source LLMs locally for AI-p
 
 ## Quick Start
 
+### One-Command Setup (Recommended)
+
 ```bash
 # Clone the repository
 git clone https://github.com/devopz-ai/local-llm-coding-setup.git
 cd local-llm-coding-setup
 
-# Run initial setup (installs Aider, configures environment)
-./scripts/setup.sh
+# Run the interactive master setup
+./scripts/master-setup.sh
+```
 
-# Download recommended models (~30GB)
-./scripts/pull-models.sh
+The master setup script will:
+1. Check your system (macOS, RAM, dependencies)
+2. Let you select which models to install
+3. Let you choose tools (OpenCode, Aider, mem0)
+4. Install and configure everything
+5. Test and validate the setup
+6. Show you how to use it
 
-# Start coding with AI!
+### Manual Setup (Advanced)
+
+```bash
+# Run individual setup scripts
+./scripts/setup.sh           # Basic setup
+./scripts/pull-models.sh     # Download models
+./scripts/setup-litellm.sh   # Install LiteLLM
+./scripts/setup-opencode.sh  # Install OpenCode
+./scripts/setup-memory.sh    # Install mem0
+
+# Start services
+./scripts/start-litellm.sh
 ./scripts/start-aider.sh
 ```
 
