@@ -1,6 +1,6 @@
 # Local LLM Coding Setup for Mac Mini M4 (32GB)
 
-A complete guide to setting up open-source LLMs for daily coding on Apple Silicon.
+A complete guide to setting up open-source LLMs for daily coding on Apple Silicon, with seamless integration between **free local models** and **enterprise cloud models** (AWS Bedrock).
 
 ## Hardware Specifications
 
@@ -27,33 +27,28 @@ A complete guide to setting up open-source LLMs for daily coding on Apple Silico
 ## Architecture Overview
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│                    Your Workflow                         │
-├─────────────────────────────────────────────────────────┤
-│                                                          │
-│   Terminal (CLI)              IDE/Editor                 │
-│   ┌──────────────┐           ┌──────────────┐           │
-│   │    Aider     │           │   Continue   │           │
-│   │  (AI Pair    │           │  (VS Code    │           │
-│   │  Programming)│           │   Extension) │           │
-│   └──────┬───────┘           └──────┬───────┘           │
-│          │                          │                    │
-│          └──────────┬───────────────┘                    │
-│                     │                                    │
-│              ┌──────▼──────┐                            │
-│              │   Ollama    │  ← Model Server            │
-│              │ (localhost) │    Port 11434              │
-│              └──────┬──────┘                            │
-│                     │                                    │
-│   ┌─────────────────┼─────────────────┐                 │
-│   │                 │                 │                 │
-│   ▼                 ▼                 ▼                 │
-│ ┌─────────┐   ┌──────────┐   ┌────────────┐           │
-│ │ Qwen2.5 │   │DeepSeek  │   │ Codestral  │           │
-│ │ Coder   │   │ Coder    │   │            │           │
-│ └─────────┘   └──────────┘   └────────────┘           │
-│                                                          │
-└─────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│                       Your Coding Tools                          │
+│    Aider  │  OpenCode  │  Continue (VS Code)  │  Open WebUI     │
+└─────────────────────────┬───────────────────────────────────────┘
+                          │
+                          ▼
+                ┌───────────────────┐
+                │     LiteLLM       │  ← Unified API Gateway
+                │   (Port 4000)     │    OpenAI-compatible
+                └─────────┬─────────┘
+                          │
+         ┌────────────────┼────────────────┐
+         ▼                ▼                ▼
+   ┌───────────┐   ┌────────────┐   ┌────────────┐
+   │  Ollama   │   │    AWS     │   │   Other    │
+   │  (FREE)   │   │  Bedrock   │   │  Providers │
+   │           │   │            │   │            │
+   │ • Qwen    │   │ • Claude   │   │ • OpenAI   │
+   │ • DeepSeek│   │ • Llama    │   │ • Anthropic│
+   │ • Codestrl│   │ • Titan    │   │            │
+   └───────────┘   └────────────┘   └────────────┘
+       LOCAL          ENTERPRISE        CLOUD
 ```
 
 ## Table of Contents
@@ -61,11 +56,13 @@ A complete guide to setting up open-source LLMs for daily coding on Apple Silico
 1. [Prerequisites](#prerequisites)
 2. [Ollama Setup](#ollama-setup)
 3. [Recommended Models](#recommended-models)
-4. [Web UI Options](#web-ui-options)
-5. [CLI Coding Tools](#cli-coding-tools)
-6. [IDE Integration](#ide-integration)
-7. [Performance Tuning](#performance-tuning)
-8. [Troubleshooting](#troubleshooting)
+4. [LiteLLM Proxy](#litellm-proxy-unified-api) *(NEW)*
+5. [AWS Bedrock Integration](#aws-bedrock-integration) *(NEW)*
+6. [Web UI Options](#web-ui-options)
+7. [CLI Coding Tools](#cli-coding-tools)
+8. [IDE Integration](#ide-integration)
+9. [Performance Tuning](#performance-tuning)
+10. [Troubleshooting](#troubleshooting)
 
 ---
 
@@ -188,6 +185,154 @@ ollama run qwen2.5-coder:7b "Write a Python function to merge two sorted lists"
 
 ---
 
+## LiteLLM Proxy (Unified API)
+
+LiteLLM provides a unified OpenAI-compatible API that routes requests to multiple backends. This allows you to:
+
+- **Switch seamlessly** between free local models and enterprise cloud models
+- **Use any tool** that supports OpenAI API (most do!)
+- **Add fallbacks** - if local model fails, fallback to cloud
+- **Track costs** across all providers
+
+### Install LiteLLM
+
+```bash
+# Run setup script
+./scripts/setup-litellm.sh
+
+# Or manually
+pip install 'litellm[proxy]'
+```
+
+### Start LiteLLM Proxy
+
+```bash
+./scripts/start-litellm.sh
+
+# Or manually
+litellm --config ~/.litellm/config.yaml --port 4000
+```
+
+### Using LiteLLM
+
+Once running, all tools can use the unified API:
+
+```bash
+# API endpoint
+http://localhost:4000
+
+# API key (any string works for local)
+sk-1234
+```
+
+### Available Models via LiteLLM
+
+| Model Name | Backend | Cost | Best For |
+|------------|---------|------|----------|
+| `qwen-coder-fast` | Ollama | FREE | Quick tasks |
+| `qwen-coder` | Ollama | FREE | Daily coding |
+| `qwen-coder-best` | Ollama | FREE | Best local quality |
+| `deepseek-coder` | Ollama | FREE | Algorithms |
+| `claude-sonnet` | Bedrock | $$ | Complex tasks |
+| `claude-opus` | Bedrock | $$$ | Most capable |
+| `claude-haiku` | Bedrock | $ | Fast & cheap |
+
+### Example: Using with curl
+
+```bash
+# Use local model (FREE)
+curl http://localhost:4000/v1/chat/completions \
+  -H "Authorization: Bearer sk-1234" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "qwen-coder",
+    "messages": [{"role": "user", "content": "Write a Python hello world"}]
+  }'
+
+# Use Bedrock Claude (requires AWS credentials)
+curl http://localhost:4000/v1/chat/completions \
+  -H "Authorization: Bearer sk-1234" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "claude-sonnet",
+    "messages": [{"role": "user", "content": "Write a Python hello world"}]
+  }'
+```
+
+---
+
+## AWS Bedrock Integration
+
+AWS Bedrock provides enterprise-grade access to Claude, Llama, and other models with:
+- **Security**: Your data stays in your AWS account
+- **Compliance**: SOC2, HIPAA, etc.
+- **No rate limits**: Based on your provisioned capacity
+- **Cost control**: Pay per token, track via AWS billing
+
+### Prerequisites
+
+1. **AWS Account** with Bedrock access enabled
+2. **Model Access**: Request access to models in AWS Console
+3. **AWS CLI** configured with credentials
+
+### Setup AWS CLI
+
+```bash
+# Install AWS CLI
+brew install awscli
+
+# Configure credentials
+aws configure
+# Enter: AWS Access Key ID, Secret Access Key, Region (us-west-2)
+
+# Verify
+aws sts get-caller-identity
+```
+
+### Enable Bedrock Model Access
+
+1. Go to AWS Console > Bedrock > Model access
+2. Request access to:
+   - Anthropic Claude 3.5 Sonnet
+   - Anthropic Claude 3 Opus
+   - Anthropic Claude 3.5 Haiku
+   - Meta Llama 3.1 (optional)
+3. Wait for approval (usually instant for Claude)
+
+### Available Bedrock Models
+
+| Model | LiteLLM Name | Use Case |
+|-------|--------------|----------|
+| Claude 3.5 Sonnet | `claude-sonnet` | Best balance of speed/quality |
+| Claude 3 Opus | `claude-opus` | Most capable, complex tasks |
+| Claude 3.5 Haiku | `claude-haiku` | Fast, economical |
+| Llama 3.1 70B | `bedrock-llama` | Open source alternative |
+| Amazon Titan | `titan` | AWS native model |
+
+### Using Bedrock with Aider
+
+```bash
+# Start LiteLLM first
+./scripts/start-litellm.sh
+
+# Then use Aider with Bedrock Claude
+aider --openai-api-base http://localhost:4000 \
+      --openai-api-key sk-1234 \
+      --model claude-sonnet
+```
+
+### Cost Estimation (Bedrock)
+
+| Model | Input (per 1M tokens) | Output (per 1M tokens) |
+|-------|----------------------|------------------------|
+| Claude 3.5 Sonnet | $3.00 | $15.00 |
+| Claude 3 Opus | $15.00 | $75.00 |
+| Claude 3.5 Haiku | $0.80 | $4.00 |
+
+*Tip: Use free local models for routine tasks, Bedrock for complex ones*
+
+---
+
 ## Web UI Options
 
 ### Option 1: Open WebUI (Recommended)
@@ -263,7 +408,7 @@ brew install pipx
 pipx install aider-chat
 ```
 
-#### Configure for Ollama
+#### Configure for Ollama (Direct)
 
 ```bash
 # Set environment variable
@@ -273,15 +418,35 @@ export OLLAMA_API_BASE=http://localhost:11434
 aider --model ollama/qwen2.5-coder:14b
 ```
 
-#### Create Alias for Easy Access
+#### Configure for LiteLLM (Recommended - supports all models)
+
+```bash
+# Start LiteLLM first
+./scripts/start-litellm.sh
+
+# Use local model (FREE)
+aider --openai-api-base http://localhost:4000 \
+      --openai-api-key sk-1234 \
+      --model qwen-coder
+
+# Use Bedrock Claude (Enterprise)
+aider --openai-api-base http://localhost:4000 \
+      --openai-api-key sk-1234 \
+      --model claude-sonnet
+```
+
+#### Create Aliases for Easy Access
 
 Add to `~/.zshrc`:
 
 ```bash
-# Aider with local LLM
+# Aider with local LLM (direct Ollama)
 alias aider-local="aider --model ollama/qwen2.5-coder:14b"
 alias aider-fast="aider --model ollama/qwen2.5-coder:7b"
-alias aider-best="aider --model ollama/qwen2.5-coder:32b"
+
+# Aider with LiteLLM (any model)
+alias aider-lite="aider --openai-api-base http://localhost:4000 --openai-api-key sk-1234"
+alias aider-claude="aider --openai-api-base http://localhost:4000 --openai-api-key sk-1234 --model claude-sonnet"
 ```
 
 #### Usage Examples
@@ -304,7 +469,19 @@ aider-local
 /commit
 ```
 
-### Alternative: llm CLI
+### OpenCode - Alternative CLI Assistant
+
+Another terminal-based AI coding assistant.
+
+```bash
+# Install
+./scripts/setup-opencode.sh
+
+# Use with LiteLLM
+opencode
+```
+
+### llm CLI
 
 ```bash
 # Install
@@ -330,7 +507,7 @@ Continue provides AI-powered coding assistance directly in VS Code.
 3. Search for "Continue"
 4. Install "Continue - Codestral, Claude, and more"
 
-#### Configure for Ollama
+#### Configure for Ollama (Direct)
 
 Create/edit `~/.continue/config.json`:
 
@@ -348,18 +525,49 @@ Create/edit `~/.continue/config.json`:
       "provider": "ollama",
       "model": "qwen2.5-coder:7b",
       "apiBase": "http://localhost:11434"
-    },
-    {
-      "title": "DeepSeek Coder V2",
-      "provider": "ollama",
-      "model": "deepseek-coder-v2:16b",
-      "apiBase": "http://localhost:11434"
     }
   ],
   "tabAutocompleteModel": {
     "title": "Qwen2.5 Coder 7B",
     "provider": "ollama",
     "model": "qwen2.5-coder:7b"
+  }
+}
+```
+
+#### Configure for LiteLLM (All Models)
+
+```json
+{
+  "models": [
+    {
+      "title": "Local - Qwen Coder",
+      "provider": "openai",
+      "model": "qwen-coder",
+      "apiBase": "http://localhost:4000",
+      "apiKey": "sk-1234"
+    },
+    {
+      "title": "Bedrock - Claude Sonnet",
+      "provider": "openai",
+      "model": "claude-sonnet",
+      "apiBase": "http://localhost:4000",
+      "apiKey": "sk-1234"
+    },
+    {
+      "title": "Bedrock - Claude Opus",
+      "provider": "openai",
+      "model": "claude-opus",
+      "apiBase": "http://localhost:4000",
+      "apiKey": "sk-1234"
+    }
+  ],
+  "tabAutocompleteModel": {
+    "title": "Local Fast",
+    "provider": "openai",
+    "model": "qwen-coder-fast",
+    "apiBase": "http://localhost:4000",
+    "apiKey": "sk-1234"
   }
 }
 ```
@@ -378,7 +586,8 @@ Cursor has built-in support for Ollama:
 1. Open Cursor Settings
 2. Go to Models
 3. Add Ollama endpoint: `http://localhost:11434`
-4. Select your model
+4. Or add LiteLLM: `http://localhost:4000` with key `sk-1234`
+5. Select your model
 
 ### Neovim/Vim
 
@@ -446,8 +655,8 @@ ollama stop qwen2.5-coder:7b
 
 | Scenario | Recommendation |
 |----------|---------------|
-| Quick questions | Use 7B models |
-| Complex refactoring | Use 14B+ models |
+| Quick questions | Use 7B models (FREE) |
+| Complex refactoring | Use 14B+ or Claude (Bedrock) |
 | Multiple models needed | Keep max 2 loaded |
 | Long context needed | Increase `num_ctx` to 16384 |
 
@@ -494,6 +703,32 @@ ollama stop <model-name>
 ollama run qwen2.5-coder:7b
 ```
 
+### LiteLLM Issues
+
+```bash
+# Check if running
+curl http://localhost:4000/health
+
+# View logs
+litellm --config ~/.litellm/config.yaml --port 4000 --debug
+
+# Test model list
+curl http://localhost:4000/v1/models
+```
+
+### Bedrock Connection Issues
+
+```bash
+# Verify AWS credentials
+aws sts get-caller-identity
+
+# Check Bedrock access
+aws bedrock list-foundation-models --query "modelSummaries[?contains(modelId, 'claude')]"
+
+# Ensure region is correct (us-west-2 recommended)
+aws configure get region
+```
+
 ### Slow Generation
 
 1. Use smaller quantized model
@@ -518,28 +753,46 @@ curl http://localhost:11434/api/tags
 ### Recommended Daily Setup
 
 1. **Morning**: Ensure Ollama is running (check menu bar or `ollama ps`)
-2. **For quick coding**: Use Aider in terminal
-3. **For IDE work**: Use Continue in VS Code
-4. **For exploration/learning**: Use Open WebUI
+2. **Start LiteLLM** for unified access: `./scripts/start-litellm.sh`
+3. **For quick coding**: Use Aider with local model (FREE)
+4. **For complex tasks**: Switch to Bedrock Claude
+5. **For IDE work**: Use Continue in VS Code
+6. **For exploration/learning**: Use Open WebUI
 
 ### Sample Workflow
 
 ```bash
-# Start your day
-cd ~/your-project
+# Start your day - start LiteLLM proxy
+./scripts/start-litellm.sh &
 
-# Quick question
-ollama run qwen2.5-coder:7b "How do I implement a binary search in Python?"
+# Quick question (FREE - local)
+curl http://localhost:4000/v1/chat/completions \
+  -H "Authorization: Bearer sk-1234" \
+  -d '{"model": "qwen-coder-fast", "messages": [{"role": "user", "content": "Quick: how to reverse a list in Python?"}]}'
 
-# Coding session with Aider
-aider --model ollama/qwen2.5-coder:14b
+# Coding session with local model (FREE)
+aider --openai-api-base http://localhost:4000 --openai-api-key sk-1234 --model qwen-coder
+
+# Complex refactoring with Claude (Bedrock)
+aider --openai-api-base http://localhost:4000 --openai-api-key sk-1234 --model claude-sonnet
 
 # In Aider:
 /add src/search.py
-> Implement a binary search function with proper error handling
+> Refactor this to use async/await with proper error handling
 /diff
-/commit "Add binary search implementation"
+/commit "Refactor search to async with error handling"
 ```
+
+### Cost-Effective Strategy
+
+| Task Type | Model | Cost |
+|-----------|-------|------|
+| Quick questions | qwen-coder-fast | FREE |
+| Daily coding | qwen-coder | FREE |
+| Code review | qwen-coder | FREE |
+| Complex debugging | claude-haiku | $ |
+| Major refactoring | claude-sonnet | $$ |
+| Architecture design | claude-opus | $$$ |
 
 ---
 
@@ -547,6 +800,8 @@ aider --model ollama/qwen2.5-coder:14b
 
 - [Ollama Documentation](https://ollama.com/docs)
 - [Ollama Model Library](https://ollama.com/library)
+- [LiteLLM Documentation](https://docs.litellm.ai/)
+- [AWS Bedrock Documentation](https://docs.aws.amazon.com/bedrock/)
 - [Aider Documentation](https://aider.chat/)
 - [Continue Documentation](https://docs.continue.dev/)
 - [Open WebUI Documentation](https://docs.openwebui.com/)

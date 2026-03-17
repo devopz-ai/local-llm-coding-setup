@@ -1,0 +1,160 @@
+# LiteLLM Proxy Configuration
+# Unified API for local (Ollama) and enterprise (Bedrock) models
+#
+# Start with: litellm --config ~/.litellm/config.yaml --port 4000
+# API Base: http://localhost:4000
+# API Key: any string (e.g., sk-1234)
+
+model_list:
+  # ============================================
+  # FREE LOCAL MODELS (Ollama)
+  # ============================================
+
+  # Fast coding model - daily driver
+  - model_name: qwen-coder-fast
+    litellm_params:
+      model: ollama/qwen2.5-coder:7b
+      api_base: http://localhost:11434
+    model_info:
+      description: "Fast local coding model (7B) - FREE"
+
+  # Balanced coding model - recommended
+  - model_name: qwen-coder
+    litellm_params:
+      model: ollama/qwen2.5-coder:14b
+      api_base: http://localhost:11434
+    model_info:
+      description: "Balanced local coding model (14B) - FREE"
+
+  # Best local coding model
+  - model_name: qwen-coder-best
+    litellm_params:
+      model: ollama/qwen2.5-coder:32b
+      api_base: http://localhost:11434
+    model_info:
+      description: "Best local coding model (32B) - FREE, slower"
+
+  # DeepSeek for algorithms
+  - model_name: deepseek-coder
+    litellm_params:
+      model: ollama/deepseek-coder-v2:16b
+      api_base: http://localhost:11434
+    model_info:
+      description: "Algorithm-focused model (16B) - FREE"
+
+  # Codestral for IDE
+  - model_name: codestral
+    litellm_params:
+      model: ollama/codestral:22b
+      api_base: http://localhost:11434
+    model_info:
+      description: "Mistral coding model (22B) - FREE"
+
+  # General purpose
+  - model_name: llama
+    litellm_params:
+      model: ollama/llama3.2:8b
+      api_base: http://localhost:11434
+    model_info:
+      description: "General purpose model (8B) - FREE"
+
+  # ============================================
+  # AWS BEDROCK MODELS (Enterprise)
+  # Requires AWS credentials configured
+  # ============================================
+
+  # Claude 3.5 Sonnet - Best for most coding tasks
+  - model_name: claude-sonnet
+    litellm_params:
+      model: bedrock/anthropic.claude-3-5-sonnet-20241022-v2:0
+      aws_region_name: us-west-2
+    model_info:
+      description: "Claude 3.5 Sonnet via Bedrock - Enterprise"
+
+  # Claude 3 Opus - Most capable
+  - model_name: claude-opus
+    litellm_params:
+      model: bedrock/anthropic.claude-3-opus-20240229-v1:0
+      aws_region_name: us-west-2
+    model_info:
+      description: "Claude 3 Opus via Bedrock - Enterprise (most capable)"
+
+  # Claude 3.5 Haiku - Fast and cheap
+  - model_name: claude-haiku
+    litellm_params:
+      model: bedrock/anthropic.claude-3-5-haiku-20241022-v1:0
+      aws_region_name: us-west-2
+    model_info:
+      description: "Claude 3.5 Haiku via Bedrock - Fast & economical"
+
+  # Llama 3.1 on Bedrock
+  - model_name: bedrock-llama
+    litellm_params:
+      model: bedrock/meta.llama3-1-70b-instruct-v1:0
+      aws_region_name: us-west-2
+    model_info:
+      description: "Llama 3.1 70B via Bedrock - Enterprise"
+
+  # Amazon Titan
+  - model_name: titan
+    litellm_params:
+      model: bedrock/amazon.titan-text-premier-v1:0
+      aws_region_name: us-west-2
+    model_info:
+      description: "Amazon Titan Premier via Bedrock"
+
+  # ============================================
+  # ALIASES for convenience
+  # ============================================
+
+  # Default coding model (local free)
+  - model_name: gpt-4
+    litellm_params:
+      model: ollama/qwen2.5-coder:14b
+      api_base: http://localhost:11434
+    model_info:
+      description: "Alias: Routes gpt-4 requests to local Qwen"
+
+  # Default fast model
+  - model_name: gpt-3.5-turbo
+    litellm_params:
+      model: ollama/qwen2.5-coder:7b
+      api_base: http://localhost:11434
+    model_info:
+      description: "Alias: Routes gpt-3.5 requests to local Qwen 7B"
+
+# ============================================
+# ROUTER SETTINGS
+# ============================================
+
+litellm_settings:
+  # Enable caching for faster repeated queries
+  cache: true
+
+  # Request timeout (seconds)
+  request_timeout: 300
+
+  # Number of retries
+  num_retries: 2
+
+  # Fallback models (if primary fails)
+  fallbacks:
+    - qwen-coder: [qwen-coder-fast]
+    - claude-sonnet: [qwen-coder-best]
+
+  # Set temperature default
+  default_temperature: 0.3
+
+# ============================================
+# GENERAL SETTINGS
+# ============================================
+
+general_settings:
+  # Master key for admin endpoints (change this!)
+  master_key: sk-litellm-master-key-change-me
+
+  # Database for tracking (optional)
+  # database_url: sqlite:///litellm.db
+
+  # Enable detailed logging
+  # debug: true
