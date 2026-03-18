@@ -399,7 +399,7 @@ install_python_packages() {
     # Install mem0 if selected
     if [[ "$INSTALL_MEM0" == "true" ]]; then
         print_step "Installing mem0..."
-        pip3 install mem0ai chromadb -q
+        pip3 install mem0ai chromadb ollama -q
         print_success "mem0 installed"
 
         # Pull embedding model

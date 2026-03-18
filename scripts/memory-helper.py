@@ -67,35 +67,41 @@ def main():
             sys.exit(1)
         query = " ".join(sys.argv[2:])
         results = memory.search(query, user_id=user_id, limit=5)
-        if results:
+        memories = results.get('results', []) if isinstance(results, dict) else results
+        if memories:
             print("📚 Found memories:")
-            for r in results:
-                print(f"  - {r['memory']}")
+            for r in memories:
+                print(f"  - {r.get('memory', str(r))}")
         else:
             print("No memories found.")
 
     elif command == "list":
-        memories = memory.get_all(user_id=user_id)
+        result = memory.get_all(user_id=user_id)
+        memories = result.get('results', []) if isinstance(result, dict) else result
         if memories:
             print(f"📚 All memories for {user_id}:")
             for m in memories:
-                print(f"  [{m['id'][:8]}] {m['memory'][:60]}...")
+                mem_text = m.get('memory', str(m))[:60]
+                mem_id = m.get('id', 'unknown')[:8]
+                print(f"  [{mem_id}] {mem_text}...")
         else:
             print("No memories stored.")
 
     elif command == "clear":
-        memories = memory.get_all(user_id=user_id)
+        result = memory.get_all(user_id=user_id)
+        memories = result.get('results', []) if isinstance(result, dict) else result
         for m in memories:
-            memory.delete(m['id'])
+            memory.delete(m.get('id'))
         print(f"🗑️  Cleared all memories for {user_id}")
 
     elif command == "context":
         # Get context for current project to use with LLM
-        memories = memory.get_all(user_id=user_id)
+        result = memory.get_all(user_id=user_id)
+        memories = result.get('results', []) if isinstance(result, dict) else result
         if memories:
             print("# Project Context from Memory\n")
             for m in memories:
-                print(f"- {m['memory']}")
+                print(f"- {m.get('memory', str(m))}")
         else:
             print("# No stored context")
 
