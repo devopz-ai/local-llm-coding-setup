@@ -351,7 +351,7 @@ aider --openai-api-base http://localhost:4000 --openai-api-key sk-1234 --model c
 
 ## Memory Management
 
-Keep conversation context across sessions using mem0.
+Keep conversation context across sessions using mem0. Each project has its own memory storage.
 
 ### Setup
 
@@ -359,38 +359,45 @@ Keep conversation context across sessions using mem0.
 ./scripts/setup-memory.sh
 ```
 
+### Storage Structure
+
+```
+~/.mem0/projects/
+├── my-fastapi-app/       # Project 1 memories
+├── react-frontend/       # Project 2 memories
+└── local-llm-coding-setup/  # Project 3 memories
+```
+
 ### Usage
 
 ```bash
-# Add project context
+# Add project context (stored per-project)
 mem add "This project uses FastAPI with PostgreSQL"
 mem add "Authentication uses JWT tokens"
 
 # Search memories
 mem search "What database?"
 
-# List all memories
+# List all memories for current project
 mem list
 
-# Use Aider with memory
-aider-mem
+# List ALL projects with memories
+mem projects
+
+# Get context for LLM prompt
+mem context
 ```
 
 ### How It Works
 
 ```
-Session 1                    Session 2
-─────────                    ─────────
-User: "Uses FastAPI"         User: "What framework?"
-         │                            │
-         ▼                            ▼
-    ┌─────────┐                 ┌─────────┐
-    │  mem0   │ ───────────────▶│  mem0   │
-    │  SAVE   │    persisted    │ RECALL  │
-    └─────────┘                 └─────────┘
-                                      │
-                                      ▼
-                               AI: "FastAPI"
+~/.mem0/projects/
+       │
+       ├── project-a/     ◄── cd ~/project-a && mem add "..."
+       │
+       └── project-b/     ◄── cd ~/project-b && mem add "..."
+
+Each project's memories are isolated and persistent.
 ```
 
 ---

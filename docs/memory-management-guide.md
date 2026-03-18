@@ -704,7 +704,7 @@ curl http://localhost:11434/api/embeddings -d '{
 
 ## Memory Helper CLI
 
-This repository includes a convenient CLI tool for managing memories.
+This repository includes a convenient CLI tool for managing memories per-project.
 
 ### Installation
 
@@ -714,14 +714,31 @@ The memory helper is installed automatically by `master-setup.sh`. After setup, 
 alias mem="~/Documents/Projects/LLM/local-llm-coding-setup/scripts/memory-helper.py"
 ```
 
+### Storage Structure
+
+Each project's memories are stored separately:
+
+```
+~/.mem0/
+├── projects/
+│   ├── my-fastapi-app/          # Project 1 memories
+│   │   └── chroma.sqlite3
+│   ├── react-frontend/          # Project 2 memories
+│   │   └── chroma.sqlite3
+│   └── local-llm-coding-setup/  # Project 3 memories
+│       └── chroma.sqlite3
+├── config.yaml                   # Global config
+└── history.db                    # Conversation history
+```
+
 ### Commands
 
 ```bash
-# Add memory (stored per-project based on current directory)
+# Add memory (stored in ~/.mem0/projects/<current-dir-name>/)
 mem add "This project uses FastAPI with PostgreSQL"
 mem add "Authentication uses JWT tokens stored in Redis"
 
-# Search memories
+# Search memories for current project
 mem search "what database"
 mem search "authentication"
 
@@ -733,24 +750,47 @@ mem context
 
 # Clear all memories for current project
 mem clear
+
+# List ALL projects that have stored memories
+mem projects
 ```
 
 ### How It Works
 
-- Memories are stored per-project (based on current directory name)
-- Uses ChromaDB for vector storage at `~/.mem0/chroma_db/`
-- Uses `nomic-embed-text` for local embeddings via Ollama
-- Uses `qwen2.5-coder:7b` for memory extraction
+| Component | Technology | Details |
+|-----------|------------|---------|
+| LLM | Ollama | `qwen2.5-coder:7b` for memory extraction |
+| Embeddings | Ollama | `nomic-embed-text` for vector search |
+| Vector Store | ChromaDB | `~/.mem0/projects/<project>/` |
+| Project Detection | Directory name | Based on `basename $PWD` |
 
 ### Example Workflow
 
 ```bash
-cd ~/my-project
-
-# Add context about your project
+# Project 1: FastAPI backend
+cd ~/my-fastapi-app
 mem add "This is a Python FastAPI backend"
 mem add "Uses SQLAlchemy ORM with PostgreSQL"
 mem add "Auth via OAuth2 with JWT tokens"
+# Stored in: ~/.mem0/projects/my-fastapi-app/
+
+# Project 2: React frontend
+cd ~/react-frontend
+mem add "React 18 with TypeScript"
+mem add "Uses Redux Toolkit for state"
+# Stored in: ~/.mem0/projects/react-frontend/
+
+# List all projects with memories
+mem projects
+# 📁 Projects with memories:
+#   - my-fastapi-app (512.0 KB)
+#   - react-frontend (256.0 KB)
+
+# Back to FastAPI project - memories are separate
+cd ~/my-fastapi-app
+mem search "database"
+# 📚 Found memories in [my-fastapi-app]:
+#   - Uses SQLAlchemy ORM with PostgreSQL
 
 # Later, search for relevant context
 mem search "database setup"

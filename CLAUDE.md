@@ -155,11 +155,12 @@ aider --openai-api-base http://localhost:4000 --openai-api-key sk-1234 --model q
 # Coding with Bedrock (Enterprise)
 aider --openai-api-base http://localhost:4000 --openai-api-key sk-1234 --model claude-sonnet
 
-# Memory commands
-mem add "Project uses FastAPI"    # Add memory
-mem search "framework"            # Search memories
-mem list                          # List all memories
-aider-mem                         # Aider with memory context
+# Memory commands (stored per-project in ~/.mem0/projects/<project>/)
+mem add "Project uses FastAPI"    # Add memory to current project
+mem search "framework"            # Search current project memories
+mem list                          # List current project memories
+mem projects                      # List ALL projects with memories
+mem context                       # Get context for LLM prompt
 
 # Model management
 ollama ps                         # Check loaded models
