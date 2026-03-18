@@ -15,6 +15,7 @@ A complete, production-ready setup for running open-source LLMs locally for AI-p
 | **Privacy First** | Code stays on your machine with local models |
 | **Memory Persistence** | AI remembers your project context across sessions |
 | **Unified Interface** | One API for all models via LiteLLM |
+| **Auto-Start** | LiteLLM starts automatically on boot |
 
 ## Quick Start
 
@@ -34,8 +35,10 @@ The master setup script will:
 2. Let you select which models to install
 3. Let you choose tools (OpenCode, Aider, mem0)
 4. Install and configure everything
-5. Test and validate the setup
-6. Show you how to use it
+5. Install LiteLLM as auto-start service (starts on boot)
+6. Configure OpenCode to use FREE local models by default
+7. Test and validate the setup
+8. Show you how to use it
 
 ### Manual Setup (Advanced)
 
@@ -424,8 +427,12 @@ aider --openai-api-base http://localhost:4000 --openai-api-key sk-1234 --model c
 # Install
 brew install opencode
 
-# Start
+# Start (uses FREE local qwen model by default)
 opencode
+
+# Or use a specific model
+opencode -m litellm/claude-sonnet    # Claude via Bedrock
+opencode -m ollama/qwen2.5-coder:7b  # Direct Ollama
 ```
 
 ### Claude Code
@@ -511,14 +518,20 @@ export AWS_DEFAULT_REGION=us-west-2
 ### Shell Aliases
 
 ```bash
+# LiteLLM service management
+alias llm-status="./scripts/litellm-service.sh status"
+alias llm-logs="./scripts/litellm-service.sh logs"
+
+# OpenCode shortcuts (uses FREE local model by default)
+alias oc="opencode"
+alias oc-fast="opencode -m litellm/qwen-coder-fast"
+alias oc-claude="opencode -m litellm/claude-sonnet"
+alias oc-ollama="opencode -m ollama/qwen2.5-coder:7b"
+
 # Aider shortcuts
 alias aider-local="aider --model ollama/qwen2.5-coder:14b"
 alias aider-fast="aider --model ollama/qwen2.5-coder:7b"
 alias aider-claude="aider --openai-api-base http://localhost:4000 --openai-api-key sk-1234 --model claude-sonnet"
-
-# OpenCode shortcuts
-alias oc="opencode"
-alias oc-fast="OPENCODE_MODEL=qwen-coder-fast opencode"
 
 # Memory
 alias mem="memory-helper.py"
@@ -531,6 +544,9 @@ alias aider-mem="aider-with-memory.sh"
 |--------|----------|
 | Ollama | `~/.ollama/` |
 | LiteLLM | `~/.litellm/config.yaml` |
+| LiteLLM Service | `~/Library/LaunchAgents/com.devopz.litellm.plist` |
+| LiteLLM Logs | `~/.litellm/logs/` |
+| OpenCode | `~/.config/opencode/opencode.json` |
 | mem0 | `~/.mem0/config.yaml` |
 | Continue | `~/.continue/config.json` |
 | Aider | `~/.aider.conf.yml` |

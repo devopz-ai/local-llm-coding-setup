@@ -108,6 +108,8 @@ local-llm-coding-setup/
 │   ├── CONTRIBUTING.md          # Contribution guidelines
 │   └── FUNDING.yml              # Funding info
 ├── scripts/
+│   ├── master-setup.sh          # Complete automated setup
+│   ├── litellm-service.sh       # LiteLLM service manager (auto-start)
 │   ├── setup.sh                 # Initial setup (Ollama + Aider)
 │   ├── setup-litellm.sh         # LiteLLM proxy setup
 │   ├── setup-opencode.sh        # OpenCode CLI setup
@@ -137,10 +139,16 @@ local-llm-coding-setup/
 ## Common Commands
 
 ```bash
-# Start all services
-./scripts/start-litellm.sh       # Start unified API
+# LiteLLM auto-starts on login - manage with:
+./scripts/litellm-service.sh status   # Check status
+./scripts/litellm-service.sh restart  # Restart service
+./scripts/litellm-service.sh logs     # View logs
 
-# Coding with local models (FREE)
+# OpenCode (uses FREE local model by default)
+opencode                              # Uses qwen-coder-fast automatically
+opencode -m litellm/claude-sonnet     # Use Claude via Bedrock
+
+# Coding with Aider
 aider --model ollama/qwen2.5-coder:14b
 aider --openai-api-base http://localhost:4000 --openai-api-key sk-1234 --model qwen-coder
 

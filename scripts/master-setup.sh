@@ -520,10 +520,15 @@ configure_opencode() {
         }"
     done
 
-    # Create OpenCode config with custom providers
+    # Get first model name for default
+    local default_model=$(echo "${SELECTED_MODELS[0]}" | sed 's/:/-/g' | sed 's/\./-/g')
+
+    # Create OpenCode config with custom providers and default model
     cat > "$config_dir/opencode.json" << EOF
 {
   "\$schema": "https://opencode.ai/config.json",
+  "model": "litellm/$default_model",
+  "small_model": "litellm/$default_model",
   "provider": {
     "litellm": {
       "npm": "@ai-sdk/openai-compatible",
@@ -689,6 +694,69 @@ start_litellm() {
         cat /tmp/litellm.log | tail -20
         return 1
     fi
+}
+
+install_litellm_service() {
+    print_header "Installing LiteLLM Auto-Start Service"
+
+    print_step "Creating macOS Launch Agent..."
+
+    local plist_file="$HOME/Library/LaunchAgents/com.devopz.litellm.plist"
+    local log_dir="$HOME/.litellm/logs"
+    local python_bin=$(python3 -c "import site; print(site.USER_BASE)")/bin
+
+    mkdir -p "$HOME/Library/LaunchAgents"
+    mkdir -p "$log_dir"
+
+    cat > "$plist_file" << EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.devopz.litellm</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>$python_bin/litellm</string>
+        <string>--config</string>
+        <string>$HOME/.litellm/config.yaml</string>
+        <string>--port</string>
+        <string>$LITELLM_PORT</string>
+    </array>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <dict>
+        <key>SuccessfulExit</key>
+        <false/>
+    </dict>
+    <key>StandardOutPath</key>
+    <string>$log_dir/litellm.log</string>
+    <key>StandardErrorPath</key>
+    <string>$log_dir/litellm-error.log</string>
+    <key>WorkingDirectory</key>
+    <string>$HOME</string>
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/usr/local/bin:/usr/bin:/bin:$python_bin</string>
+        <key>HOME</key>
+        <string>$HOME</string>
+    </dict>
+    <key>ThrottleInterval</key>
+    <integer>10</integer>
+</dict>
+</plist>
+EOF
+
+    print_success "Created $plist_file"
+
+    # Load the service (will also start on future logins)
+    launchctl unload "$plist_file" 2>/dev/null || true
+    launchctl load "$plist_file"
+
+    print_success "LiteLLM will auto-start on login"
+    print_info "Manage with: ./scripts/litellm-service.sh [start|stop|status|logs]"
 }
 
 run_tests() {
@@ -877,6 +945,7 @@ main() {
     configure_shell
 
     start_litellm
+    install_litellm_service
     run_tests
     show_summary
 }
