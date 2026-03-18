@@ -702,6 +702,65 @@ curl http://localhost:11434/api/embeddings -d '{
 }'
 ```
 
+## Memory Helper CLI
+
+This repository includes a convenient CLI tool for managing memories.
+
+### Installation
+
+The memory helper is installed automatically by `master-setup.sh`. After setup, add to `~/.zshrc`:
+
+```bash
+alias mem="~/Documents/Projects/LLM/local-llm-coding-setup/scripts/memory-helper.py"
+```
+
+### Commands
+
+```bash
+# Add memory (stored per-project based on current directory)
+mem add "This project uses FastAPI with PostgreSQL"
+mem add "Authentication uses JWT tokens stored in Redis"
+
+# Search memories
+mem search "what database"
+mem search "authentication"
+
+# List all memories for current project
+mem list
+
+# Get context for LLM prompt
+mem context
+
+# Clear all memories for current project
+mem clear
+```
+
+### How It Works
+
+- Memories are stored per-project (based on current directory name)
+- Uses ChromaDB for vector storage at `~/.mem0/chroma_db/`
+- Uses `nomic-embed-text` for local embeddings via Ollama
+- Uses `qwen2.5-coder:7b` for memory extraction
+
+### Example Workflow
+
+```bash
+cd ~/my-project
+
+# Add context about your project
+mem add "This is a Python FastAPI backend"
+mem add "Uses SQLAlchemy ORM with PostgreSQL"
+mem add "Auth via OAuth2 with JWT tokens"
+
+# Later, search for relevant context
+mem search "database setup"
+# Returns: Uses SQLAlchemy ORM with PostgreSQL
+
+# Get all context for AI prompt
+mem context
+# Returns formatted list of all memories
+```
+
 ## Further Reading
 
 - [mem0 Documentation](https://docs.mem0.ai/)

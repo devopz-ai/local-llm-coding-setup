@@ -64,6 +64,27 @@ aws sts get-caller-identity
 litellm --config ~/.litellm/config.yaml --port 4000
 ```
 
+### 3b. Auto-Start on Boot (Recommended)
+
+Install LiteLLM as a macOS Launch Agent so it starts automatically on login:
+
+```bash
+# Install the service
+./scripts/litellm-service.sh install
+
+# Manage the service
+./scripts/litellm-service.sh status   # Check if running
+./scripts/litellm-service.sh restart  # Restart after config changes
+./scripts/litellm-service.sh logs     # View logs
+./scripts/litellm-service.sh stop     # Stop service
+./scripts/litellm-service.sh uninstall # Remove auto-start
+```
+
+**Service Details:**
+- Plist: `~/Library/LaunchAgents/com.devopz.litellm.plist`
+- Logs: `~/.litellm/logs/litellm.log`
+- Auto-restarts if it crashes
+
 ### 4. Use with Any Tool
 
 ```bash
